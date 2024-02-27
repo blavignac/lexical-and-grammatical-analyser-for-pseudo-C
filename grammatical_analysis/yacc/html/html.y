@@ -8,7 +8,7 @@
   void yyerror (const char *);
 }
 
-%union { char *s; }
+%union { char *s; int n; }
 
 %token <s> tTEXT
 %token tDIV tCDIV tSPAN tCSPAN

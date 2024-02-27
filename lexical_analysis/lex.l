@@ -12,9 +12,9 @@ HEX		((0x|X)[a-fA-F0-9]+)
 %option nounput
 
 %%
-" "				;
-"\t"			;
-"\n"			;
+" "					;
+"\t"				;
+"\n"				;
 "/*"			{BEGIN(C_MULTI_LINE_COMMENT);};
 <C_MULTI_LINE_COMMENT>"*/"	{BEGIN(INITIAL);};
 <C_MULTI_LINE_COMMENT>.|\n {};
@@ -24,7 +24,7 @@ HEX		((0x|X)[a-fA-F0-9]+)
 "if"				printf("tIF\n");
 "else"				printf("tELSE\n");
 "while"				printf("tWHILE\n");
-"print"			printf("tPRINT\n");
+"print"				printf("tPRINT\n");
 "return"			printf("tRETURN\n");
 "int"				printf("tINT\n");
 "void"				printf("tVOID\n");
@@ -38,12 +38,12 @@ HEX		((0x|X)[a-fA-F0-9]+)
 						int conv = (int)strtol(yytext,NULL, 10);
 						printf("tNB: \'%d[0x%x]\'\n",conv,conv);
 					}
-"+"				printf("tADD\n");
-"-"				printf("tSUB\n");
-"*"				printf("tMUL\n");
-"/"				printf("tDIV\n");
-"<"				printf("tLT\n");
-">"				printf("tGT\n");
+"+"					printf("tADD\n");
+"-"					printf("tSUB\n");
+"*"					printf("tMUL\n");
+"/"					printf("tDIV\n");
+"<"					printf("tLT\n");
+">"					printf("tGT\n");
 "!="				printf("tNE\n");
 "=="				printf("tEQ\n");
 ">="				printf("tGE\n");
@@ -52,13 +52,13 @@ HEX		((0x|X)[a-fA-F0-9]+)
 "&&"				printf("tAND\n");
 "||"				printf("tOR\n");
 "!"					printf("tNOT\n");
-"{"				printf("tLBRACE\n");
-"}"				printf("tRBRACE\n");
-"("				printf("tLPAR\n");
-")"				printf("tRPAR\n");
-";"				printf("tSEMI\n");
-","				printf("tCOMMA\n");
-.				printf("tERROR\n");
+"{"					printf("tLBRACE\n");
+"}"					printf("tRBRACE\n");
+"("					printf("tLPAR\n");
+")"					printf("tRPAR\n");
+";"					printf("tSEMI\n");
+","					printf("tCOMMA\n");
+.					printf("tERROR\n");
 %%
 
 int main(void) {
