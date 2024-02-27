@@ -1,0 +1,92 @@
+tINT
+tID: 'f'
+tLPAR
+tINT
+tID: 'a'
+tRPAR
+tLBRACE
+tRETURN
+tID: 'a'
+tADD
+tNB: '2[0x2]'
+tSEMI
+tRBRACE
+tVOID
+tID: 'main'
+tLPAR
+tVOID
+tRPAR
+tLBRACE
+tINT
+tID: 'a'
+tSEMI
+tID: 'a'
+tASSIGN
+tNB: '123[0x7b]'
+tADD
+tNB: '321[0x141]'
+tMUL
+tNB: '4[0x4]'
+tDIV
+tNB: '2[0x2]'
+tSUB
+tNB: '1[0x1]'
+tSEMI
+tIF
+tLPAR
+tID: 'a'
+tEQ
+tNB: '1[0x1]'
+tRPAR
+tLBRACE
+tPRINT
+tLPAR
+tID: 'a'
+tRPAR
+tSEMI
+tRBRACE
+tELSE
+tLBRACE
+tPRINT
+tLPAR
+tID: 'a'
+tSUB
+tNB: '1[0x1]'
+tRPAR
+tSEMI
+tINT
+tID: 'i'
+tCOMMA
+tID: 'j'
+tSEMI
+tID: 'i'
+tASSIGN
+tNB: '2[0x2]'
+tSEMI
+tID: 'j'
+tASSIGN
+tID: 'a'
+tSUB
+tNB: '10[0xa]'
+tSEMI
+tWHILE
+tLPAR
+tID: 'i'
+tLT
+tID: 'j'
+tRPAR
+tLBRACE
+tID: 'i'
+tASSIGN
+tID: 'i'
+tADD
+tNB: '1[0x1]'
+tSEMI
+tPRINT
+tLPAR
+tID: 'i'
+tRPAR
+tSEMI
+tRBRACE
+tRBRACE
+tRBRACE
