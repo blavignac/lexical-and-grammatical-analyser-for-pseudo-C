@@ -1,0 +1,10 @@
+tVOID
+tID: 'main'
+tLPAR
+tVOID
+tRPAR
+tLBRACE
+tINT
+tID: 'abcd'
+tSEMI
+tRBRACE

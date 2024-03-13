@@ -5,62 +5,32 @@
     void yyerror (const char *);
 %}
 
-%union { char *name; int val;}
+%code provides {
+  int yylex (void);
+  void yyerror (const char *);
+}
 
-%token tMUL tVOID tEQ tAMPER tSEMI tLPAR tRPAR tRBRACE tLBRACE tADD tCOMMA tINT tSUB tELSE tDIV tIF 
+%union { char name[32]; int val;}
+
+%token tMUL tVOID tEQ tAMPER tMAIN tSEMI tLPAR tRPAR tRBRACE tLBRACE tADD tCOMMA tINT tSUB tELSE tDIV tIF tAND tNE tGT tGE tLT tLE tOR tWHILE tRETURN tASSIGN tNOT tERROR tPRINT
 %token <name> tID
 %token <val> tNB
 
-
 %%
 
+
+main:
+        type tMAIN tLPAR tVOID tRPAR block {printf("main fonction\n");}
+;
+
 type:
-      tINT
-    | tVOID
-    ;
-
-program:
-      %empty
-    | statement_list
-    ;
-
-statement_list:
-      statement
-    | statement statement_list
-    ;
-
-statement:
-      var_dec
-    | func_dec
-    ;
-
-var_dec:
-      type tMUL tID tSEMI 
-    | type tMUL tID tEQ tID tSEMI
-    | tINT tID tSEMI {}
-    | tINT tID tEQ tNB tSEMI {}
-    ;
-
-
-func_dec:
-      tVOID tID tLPAR func_param tRPAR block tSEMI
-    ;
-
-
-func_param:
-      %empty
-    | tVOID
-    | param
-    ;
-
-param:
-      type tID tCOMMA param
-    | type tID
-    ;
+        tINT
+    |   tVOID
+;
 
 block:
-      tLBRACE expression_list tRBRACE
-    ;
+        tLBRACE expression_list tRBRACE
+;
 
 expression_list:
       %empty
@@ -68,37 +38,43 @@ expression_list:
     ;
 
 expression:
-    t_expression
-    | if
-    | if_else
-    ;
+        var_dec
+    |   assign
+;
 
-t_expression:
-    | var_dec 
-    | arithmetic
-    ;
+assign:
+        tID tASSIGN arithmetic tSEMI {printf("var assign %s \n",$1);}
+;
 
+var_dec:
+        tINT tID tSEMI {printf("var dec: %s;\n",$2);}
+    |   tINT tID tASSIGN arithmetic tSEMI {printf("var dec: %s;\n",$2);}
+;
+
+arithmetic_operator:
+      tADD {printf("+\n");}
+    | tMUL {printf("*\n");}
+    | tSUB {printf("-\n");}
+    | tDIV {printf("DIV\n");}
+;
 
 arithmetic:
-      value tADD value
-    | value tMUL value
-    | value tSUB value
-    | value tDIV value
-    ;
+        value   
+    |   arithmetic arithmetic_operator arithmetic {}
+;
 
 value:
-      tID
-    | tNB
-    ;
+        tID {printf("%s\n",$1);}
+    |   tNB {printf("%d\n",$1);}
+;
 
-if_else:
-      tIF tLPAR condition tRPAR block tELSE block
-    | tIF tLPAR condition tRPAR t_expression tELSE block
-    ;
+%%
 
-if:
-      tIF tLPAR condition tRPAR block
-    ;
+void yyerror(const char *msg) {
+  fprintf(stderr, "error: %s\n", msg);
+  exit(1);
+}
 
-condition:
-    ;
+int main(void) {
+  yyparse();
+}
