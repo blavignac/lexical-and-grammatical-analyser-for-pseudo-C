@@ -40,6 +40,12 @@ expression_list:
 expression:
         var_dec
     |   assign
+    |   if
+    |   sys_fonc_call
+;
+
+sys_fonc_call:
+    tPRINT tLPAR value tRPAR tSEMI {printf("printf fonction call with arg ");}
 ;
 
 assign:
@@ -60,13 +66,39 @@ arithmetic_operator:
 
 arithmetic:
         value   
-    |   arithmetic arithmetic_operator arithmetic {}
+    |   arithmetic arithmetic_operator arithmetic 
 ;
 
 value:
         tID {printf("%s\n",$1);}
     |   tNB {printf("%d\n",$1);}
 ;
+
+if:
+        tIF tLPAR condition tRPAR block {printf("IF\n");}
+;
+
+bool_operator:
+        tEQ {printf("==\n");}
+    |   tNE {printf("!=\n");}
+    |   tGT {printf(">\n");}
+    |   tGE {printf(">=\n");}
+    |   tLT {printf("<\n");}
+    |   tLE {printf("<=\n");}
+    |   tAND {printf("AND\n");}
+    |   tOR {printf("OR\n");}
+    |   tNOT {printf("NOT\n");}
+;
+
+bool:
+        value 
+    |   bool bool_operator bool
+    |   tNOT bool {printf("NOT\n");}
+;
+
+condition:
+        bool
+    ;
 
 %%
 

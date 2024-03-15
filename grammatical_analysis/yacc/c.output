@@ -1,0 +1,755 @@
+Terminals unused in grammar
+
+    tAMPER
+    tCOMMA
+    tELSE
+    tWHILE
+    tRETURN
+    tERROR
+
+
+State 40 conflicts: 9 shift/reduce
+State 60 conflicts: 9 shift/reduce
+State 63 conflicts: 4 shift/reduce
+
+
+Grammar
+
+    0 $accept: main $end
+
+    1 main: type tMAIN tLPAR tVOID tRPAR block
+
+    2 type: tINT
+    3     | tVOID
+
+    4 block: tLBRACE expression_list tRBRACE
+
+    5 expression_list: ε
+    6                | expression expression_list
+
+    7 expression: var_dec
+    8           | assign
+    9           | if
+   10           | sys_fonc_call
+
+   11 sys_fonc_call: tPRINT tLPAR value tRPAR tSEMI
+
+   12 assign: tID tASSIGN arithmetic tSEMI
+
+   13 var_dec: tINT tID tSEMI
+   14        | tINT tID tASSIGN arithmetic tSEMI
+
+   15 arithmetic_operator: tADD
+   16                    | tMUL
+   17                    | tSUB
+   18                    | tDIV
+
+   19 arithmetic: value
+   20           | arithmetic arithmetic_operator arithmetic
+
+   21 value: tID
+   22      | tNB
+
+   23 if: tIF tLPAR condition tRPAR block
+
+   24 bool_operator: tEQ
+   25              | tNE
+   26              | tGT
+   27              | tGE
+   28              | tLT
+   29              | tLE
+   30              | tAND
+   31              | tOR
+   32              | tNOT
+
+   33 bool: value
+   34     | bool bool_operator bool
+   35     | tNOT bool
+
+   36 condition: bool
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    tMUL (258) 16
+    tVOID (259) 1 3
+    tEQ (260) 24
+    tAMPER (261)
+    tMAIN (262) 1
+    tSEMI (263) 11 12 13 14
+    tLPAR (264) 1 11 23
+    tRPAR (265) 1 11 23
+    tRBRACE (266) 4
+    tLBRACE (267) 4
+    tADD (268) 15
+    tCOMMA (269)
+    tINT (270) 2 13 14
+    tSUB (271) 17
+    tELSE (272)
+    tDIV (273) 18
+    tIF (274) 23
+    tAND (275) 30
+    tNE (276) 25
+    tGT (277) 26
+    tGE (278) 27
+    tLT (279) 28
+    tLE (280) 29
+    tOR (281) 31
+    tWHILE (282)
+    tRETURN (283)
+    tASSIGN (284) 12 14
+    tNOT (285) 32 35
+    tERROR (286)
+    tPRINT (287) 11
+    tID <name> (288) 12 13 14 21
+    tNB <val> (289) 22
+
+
+Nonterminals, with rules where they appear
+
+    $accept (35)
+        on left: 0
+    main (36)
+        on left: 1
+        on right: 0
+    type (37)
+        on left: 2 3
+        on right: 1
+    block (38)
+        on left: 4
+        on right: 1 23
+    expression_list (39)
+        on left: 5 6
+        on right: 4 6
+    expression (40)
+        on left: 7 8 9 10
+        on right: 6
+    sys_fonc_call (41)
+        on left: 11
+        on right: 10
+    assign (42)
+        on left: 12
+        on right: 8
+    var_dec (43)
+        on left: 13 14
+        on right: 7
+    arithmetic_operator (44)
+        on left: 15 16 17 18
+        on right: 20
+    arithmetic (45)
+        on left: 19 20
+        on right: 12 14 20
+    value (46)
+        on left: 21 22
+        on right: 11 19 33
+    if (47)
+        on left: 23
+        on right: 9
+    bool_operator (48)
+        on left: 24 25 26 27 28 29 30 31 32
+        on right: 34
+    bool (49)
+        on left: 33 34 35
+        on right: 34 35 36
+    condition (50)
+        on left: 36
+        on right: 23
+
+
+State 0
+
+    0 $accept: • main $end
+
+    tVOID  shift, and go to state 1
+    tINT   shift, and go to state 2
+
+    main  go to state 3
+    type  go to state 4
+
+
+State 1
+
+    3 type: tVOID •
+
+    $default  reduce using rule 3 (type)
+
+
+State 2
+
+    2 type: tINT •
+
+    $default  reduce using rule 2 (type)
+
+
+State 3
+
+    0 $accept: main • $end
+
+    $end  shift, and go to state 5
+
+
+State 4
+
+    1 main: type • tMAIN tLPAR tVOID tRPAR block
+
+    tMAIN  shift, and go to state 6
+
+
+State 5
+
+    0 $accept: main $end •
+
+    $default  accept
+
+
+State 6
+
+    1 main: type tMAIN • tLPAR tVOID tRPAR block
+
+    tLPAR  shift, and go to state 7
+
+
+State 7
+
+    1 main: type tMAIN tLPAR • tVOID tRPAR block
+
+    tVOID  shift, and go to state 8
+
+
+State 8
+
+    1 main: type tMAIN tLPAR tVOID • tRPAR block
+
+    tRPAR  shift, and go to state 9
+
+
+State 9
+
+    1 main: type tMAIN tLPAR tVOID tRPAR • block
+
+    tLBRACE  shift, and go to state 10
+
+    block  go to state 11
+
+
+State 10
+
+    4 block: tLBRACE • expression_list tRBRACE
+
+    tINT    shift, and go to state 12
+    tIF     shift, and go to state 13
+    tPRINT  shift, and go to state 14
+    tID     shift, and go to state 15
+
+    $default  reduce using rule 5 (expression_list)
+
+    expression_list  go to state 16
+    expression       go to state 17
+    sys_fonc_call    go to state 18
+    assign           go to state 19
+    var_dec          go to state 20
+    if               go to state 21
+
+
+State 11
+
+    1 main: type tMAIN tLPAR tVOID tRPAR block •
+
+    $default  reduce using rule 1 (main)
+
+
+State 12
+
+   13 var_dec: tINT • tID tSEMI
+   14        | tINT • tID tASSIGN arithmetic tSEMI
+
+    tID  shift, and go to state 22
+
+
+State 13
+
+   23 if: tIF • tLPAR condition tRPAR block
+
+    tLPAR  shift, and go to state 23
+
+
+State 14
+
+   11 sys_fonc_call: tPRINT • tLPAR value tRPAR tSEMI
+
+    tLPAR  shift, and go to state 24
+
+
+State 15
+
+   12 assign: tID • tASSIGN arithmetic tSEMI
+
+    tASSIGN  shift, and go to state 25
+
+
+State 16
+
+    4 block: tLBRACE expression_list • tRBRACE
+
+    tRBRACE  shift, and go to state 26
+
+
+State 17
+
+    6 expression_list: expression • expression_list
+
+    tINT    shift, and go to state 12
+    tIF     shift, and go to state 13
+    tPRINT  shift, and go to state 14
+    tID     shift, and go to state 15
+
+    $default  reduce using rule 5 (expression_list)
+
+    expression_list  go to state 27
+    expression       go to state 17
+    sys_fonc_call    go to state 18
+    assign           go to state 19
+    var_dec          go to state 20
+    if               go to state 21
+
+
+State 18
+
+   10 expression: sys_fonc_call •
+
+    $default  reduce using rule 10 (expression)
+
+
+State 19
+
+    8 expression: assign •
+
+    $default  reduce using rule 8 (expression)
+
+
+State 20
+
+    7 expression: var_dec •
+
+    $default  reduce using rule 7 (expression)
+
+
+State 21
+
+    9 expression: if •
+
+    $default  reduce using rule 9 (expression)
+
+
+State 22
+
+   13 var_dec: tINT tID • tSEMI
+   14        | tINT tID • tASSIGN arithmetic tSEMI
+
+    tSEMI    shift, and go to state 28
+    tASSIGN  shift, and go to state 29
+
+
+State 23
+
+   23 if: tIF tLPAR • condition tRPAR block
+
+    tNOT  shift, and go to state 30
+    tID   shift, and go to state 31
+    tNB   shift, and go to state 32
+
+    value      go to state 33
+    bool       go to state 34
+    condition  go to state 35
+
+
+State 24
+
+   11 sys_fonc_call: tPRINT tLPAR • value tRPAR tSEMI
+
+    tID  shift, and go to state 31
+    tNB  shift, and go to state 32
+
+    value  go to state 36
+
+
+State 25
+
+   12 assign: tID tASSIGN • arithmetic tSEMI
+
+    tID  shift, and go to state 31
+    tNB  shift, and go to state 32
+
+    arithmetic  go to state 37
+    value       go to state 38
+
+
+State 26
+
+    4 block: tLBRACE expression_list tRBRACE •
+
+    $default  reduce using rule 4 (block)
+
+
+State 27
+
+    6 expression_list: expression expression_list •
+
+    $default  reduce using rule 6 (expression_list)
+
+
+State 28
+
+   13 var_dec: tINT tID tSEMI •
+
+    $default  reduce using rule 13 (var_dec)
+
+
+State 29
+
+   14 var_dec: tINT tID tASSIGN • arithmetic tSEMI
+
+    tID  shift, and go to state 31
+    tNB  shift, and go to state 32
+
+    arithmetic  go to state 39
+    value       go to state 38
+
+
+State 30
+
+   35 bool: tNOT • bool
+
+    tNOT  shift, and go to state 30
+    tID   shift, and go to state 31
+    tNB   shift, and go to state 32
+
+    value  go to state 33
+    bool   go to state 40
+
+
+State 31
+
+   21 value: tID •
+
+    $default  reduce using rule 21 (value)
+
+
+State 32
+
+   22 value: tNB •
+
+    $default  reduce using rule 22 (value)
+
+
+State 33
+
+   33 bool: value •
+
+    $default  reduce using rule 33 (bool)
+
+
+State 34
+
+   34 bool: bool • bool_operator bool
+   36 condition: bool •
+
+    tEQ   shift, and go to state 41
+    tAND  shift, and go to state 42
+    tNE   shift, and go to state 43
+    tGT   shift, and go to state 44
+    tGE   shift, and go to state 45
+    tLT   shift, and go to state 46
+    tLE   shift, and go to state 47
+    tOR   shift, and go to state 48
+    tNOT  shift, and go to state 49
+
+    $default  reduce using rule 36 (condition)
+
+    bool_operator  go to state 50
+
+
+State 35
+
+   23 if: tIF tLPAR condition • tRPAR block
+
+    tRPAR  shift, and go to state 51
+
+
+State 36
+
+   11 sys_fonc_call: tPRINT tLPAR value • tRPAR tSEMI
+
+    tRPAR  shift, and go to state 52
+
+
+State 37
+
+   12 assign: tID tASSIGN arithmetic • tSEMI
+   20 arithmetic: arithmetic • arithmetic_operator arithmetic
+
+    tMUL   shift, and go to state 53
+    tSEMI  shift, and go to state 54
+    tADD   shift, and go to state 55
+    tSUB   shift, and go to state 56
+    tDIV   shift, and go to state 57
+
+    arithmetic_operator  go to state 58
+
+
+State 38
+
+   19 arithmetic: value •
+
+    $default  reduce using rule 19 (arithmetic)
+
+
+State 39
+
+   14 var_dec: tINT tID tASSIGN arithmetic • tSEMI
+   20 arithmetic: arithmetic • arithmetic_operator arithmetic
+
+    tMUL   shift, and go to state 53
+    tSEMI  shift, and go to state 59
+    tADD   shift, and go to state 55
+    tSUB   shift, and go to state 56
+    tDIV   shift, and go to state 57
+
+    arithmetic_operator  go to state 58
+
+
+State 40
+
+   34 bool: bool • bool_operator bool
+   35     | tNOT bool •
+
+    tEQ   shift, and go to state 41
+    tAND  shift, and go to state 42
+    tNE   shift, and go to state 43
+    tGT   shift, and go to state 44
+    tGE   shift, and go to state 45
+    tLT   shift, and go to state 46
+    tLE   shift, and go to state 47
+    tOR   shift, and go to state 48
+    tNOT  shift, and go to state 49
+
+    tEQ       [reduce using rule 35 (bool)]
+    tAND      [reduce using rule 35 (bool)]
+    tNE       [reduce using rule 35 (bool)]
+    tGT       [reduce using rule 35 (bool)]
+    tGE       [reduce using rule 35 (bool)]
+    tLT       [reduce using rule 35 (bool)]
+    tLE       [reduce using rule 35 (bool)]
+    tOR       [reduce using rule 35 (bool)]
+    tNOT      [reduce using rule 35 (bool)]
+    $default  reduce using rule 35 (bool)
+
+    bool_operator  go to state 50
+
+
+State 41
+
+   24 bool_operator: tEQ •
+
+    $default  reduce using rule 24 (bool_operator)
+
+
+State 42
+
+   30 bool_operator: tAND •
+
+    $default  reduce using rule 30 (bool_operator)
+
+
+State 43
+
+   25 bool_operator: tNE •
+
+    $default  reduce using rule 25 (bool_operator)
+
+
+State 44
+
+   26 bool_operator: tGT •
+
+    $default  reduce using rule 26 (bool_operator)
+
+
+State 45
+
+   27 bool_operator: tGE •
+
+    $default  reduce using rule 27 (bool_operator)
+
+
+State 46
+
+   28 bool_operator: tLT •
+
+    $default  reduce using rule 28 (bool_operator)
+
+
+State 47
+
+   29 bool_operator: tLE •
+
+    $default  reduce using rule 29 (bool_operator)
+
+
+State 48
+
+   31 bool_operator: tOR •
+
+    $default  reduce using rule 31 (bool_operator)
+
+
+State 49
+
+   32 bool_operator: tNOT •
+
+    $default  reduce using rule 32 (bool_operator)
+
+
+State 50
+
+   34 bool: bool bool_operator • bool
+
+    tNOT  shift, and go to state 30
+    tID   shift, and go to state 31
+    tNB   shift, and go to state 32
+
+    value  go to state 33
+    bool   go to state 60
+
+
+State 51
+
+   23 if: tIF tLPAR condition tRPAR • block
+
+    tLBRACE  shift, and go to state 10
+
+    block  go to state 61
+
+
+State 52
+
+   11 sys_fonc_call: tPRINT tLPAR value tRPAR • tSEMI
+
+    tSEMI  shift, and go to state 62
+
+
+State 53
+
+   16 arithmetic_operator: tMUL •
+
+    $default  reduce using rule 16 (arithmetic_operator)
+
+
+State 54
+
+   12 assign: tID tASSIGN arithmetic tSEMI •
+
+    $default  reduce using rule 12 (assign)
+
+
+State 55
+
+   15 arithmetic_operator: tADD •
+
+    $default  reduce using rule 15 (arithmetic_operator)
+
+
+State 56
+
+   17 arithmetic_operator: tSUB •
+
+    $default  reduce using rule 17 (arithmetic_operator)
+
+
+State 57
+
+   18 arithmetic_operator: tDIV •
+
+    $default  reduce using rule 18 (arithmetic_operator)
+
+
+State 58
+
+   20 arithmetic: arithmetic arithmetic_operator • arithmetic
+
+    tID  shift, and go to state 31
+    tNB  shift, and go to state 32
+
+    arithmetic  go to state 63
+    value       go to state 38
+
+
+State 59
+
+   14 var_dec: tINT tID tASSIGN arithmetic tSEMI •
+
+    $default  reduce using rule 14 (var_dec)
+
+
+State 60
+
+   34 bool: bool • bool_operator bool
+   34     | bool bool_operator bool •
+
+    tEQ   shift, and go to state 41
+    tAND  shift, and go to state 42
+    tNE   shift, and go to state 43
+    tGT   shift, and go to state 44
+    tGE   shift, and go to state 45
+    tLT   shift, and go to state 46
+    tLE   shift, and go to state 47
+    tOR   shift, and go to state 48
+    tNOT  shift, and go to state 49
+
+    tEQ       [reduce using rule 34 (bool)]
+    tAND      [reduce using rule 34 (bool)]
+    tNE       [reduce using rule 34 (bool)]
+    tGT       [reduce using rule 34 (bool)]
+    tGE       [reduce using rule 34 (bool)]
+    tLT       [reduce using rule 34 (bool)]
+    tLE       [reduce using rule 34 (bool)]
+    tOR       [reduce using rule 34 (bool)]
+    tNOT      [reduce using rule 34 (bool)]
+    $default  reduce using rule 34 (bool)
+
+    bool_operator  go to state 50
+
+
+State 61
+
+   23 if: tIF tLPAR condition tRPAR block •
+
+    $default  reduce using rule 23 (if)
+
+
+State 62
+
+   11 sys_fonc_call: tPRINT tLPAR value tRPAR tSEMI •
+
+    $default  reduce using rule 11 (sys_fonc_call)
+
+
+State 63
+
+   20 arithmetic: arithmetic • arithmetic_operator arithmetic
+   20           | arithmetic arithmetic_operator arithmetic •
+
+    tMUL  shift, and go to state 53
+    tADD  shift, and go to state 55
+    tSUB  shift, and go to state 56
+    tDIV  shift, and go to state 57
+
+    tMUL      [reduce using rule 20 (arithmetic)]
+    tADD      [reduce using rule 20 (arithmetic)]
+    tSUB      [reduce using rule 20 (arithmetic)]
+    tDIV      [reduce using rule 20 (arithmetic)]
+    $default  reduce using rule 20 (arithmetic)
+
+    arithmetic_operator  go to state 58

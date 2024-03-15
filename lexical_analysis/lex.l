@@ -29,51 +29,49 @@ HEX		((0x|X)[a-fA-F0-9]+)
 <C_SINGLE_LINE_COMMENT>\n	{BEGIN(INITIAL);};
 <C_SINGLE_LINE_COMMENT>. 	;
 
-"if"				return ("tIF");
-"else"				return ("tELSE");
-"while"				return ("tWHILE");
-"print"				return ("tPRINT");
-"return "			return ("tRETURN");
-"int"				return ("tINT");
-"void"				return ("tVOID");
-[a-z][a-z0-9]*		return ("tID: \'%s\'",yytext);
+"if"				printf("tIF\n");
+"else"				printf("tELSE\n");
+"while"				printf("tWHILE\n");
+"print"				printf("tPRINT\n");
+"return"			printf("tRETURN\n");
+"int"				printf("tINT\n");
+"void"				printf("tVOID\n");
+{ID}		printf("tID: \'%s\'\n",yytext);
 {HEX}				{	
 						int conv = (int)strtol(yytext+2,NULL, 16);// +2 for removing the 0x at the beginning of the string and only maintaint the hexadecimal part (!WARNING POINTER ARITHMETIC!)
-						yylval.val = conv;
-						return ("tNB");
+						printf("tNB: '%d[0x%x]'\n",conv,conv);
 					}
 					
 {DIGIT}+			{	
 						int conv = (int)strtol(yytext,NULL, 10);
-						yyval = conv;
-						return ("tNB");
+						printf("tNB: '%d[0x%x]'\n",conv,conv);
 					}
-"+"					return ("tADD");
-"-"					return ("tSUB");
-"*"					return ("tMUL");
-"/"					return ("tDIV");
-"<"					return ("tLT");
-">"					return ("tGT");
-"!="				return ("tNE");
-"=="				return ("tEQ");
-">="				return ("tGE");
-"<="				return ("tLE");
-"="					return ("tASSIGN");
-"&&"				return ("tAND");
-"&"					return ("tAMPER");
-"||"				return ("tOR");
-"!"					return ("tNOT");
-"{"					return ("tLBRACE");
-"}"					return ("tRBRACE");
-"("					return ("tLPAR");
-")"					return ("tRPAR");
-";"					return ("tSEMI");
-","					return ("tCOMMA");
-.					return ("tERROR");
+"+"					printf("tADD\n");
+"-"					printf("tSUB\n");
+"*"					printf("tMUL\n");
+"/"					printf("tDIV\n");
+"<"					printf("tLT\n");
+">"					printf("tGT\n");
+"!="				printf("tNE\n");
+"=="				printf("tEQ\n");
+">="				printf("tGE\n");
+"<="				printf("tLE\n");
+"="					printf("tASSIGN\n");
+"&&"				printf("tAND\n");
+"&"					printf("tAMPER\n");
+"||"				printf("tOR\n");
+"!"					printf("tNOT\n");
+"{"					printf("tLBRACE\n");
+"}"					printf("tRBRACE\n");
+"("					printf("tLPAR\n");
+")"					printf("tRPAR\n");
+";"					printf("tSEMI\n");
+","					printf("tCOMMA\n");
+.					printf("tERROR\n");
 %%
 
 int main(void) {
 	yylex();
-	return  0;
+	return 0;
 }
 

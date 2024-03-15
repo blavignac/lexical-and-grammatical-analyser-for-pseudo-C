@@ -42,7 +42,7 @@ HEX		((0x|X)[a-fA-F0-9]+)
 "int"				return (tINT);
 "void"				return (tVOID);
 "main" 				return (tMAIN);
-[a-z][a-z0-9]*		{
+{ID}		{
                         strncpy(yylval.name, yytext, 32);
                         return (tID);
                     }

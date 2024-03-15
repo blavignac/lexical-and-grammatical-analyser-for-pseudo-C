@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 2 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -508,10 +508,10 @@ char *yytext;
 	union yyvalue {
 		int value;
 	};
-#line 512 "lex.yy.c"
+#line 511 "lex.yy.c"
 		
 #define YY_NO_INPUT 1
-#line 515 "lex.yy.c"
+#line 514 "lex.yy.c"
 
 #define INITIAL 0
 #define C_MULTI_LINE_COMMENT 1
@@ -730,7 +730,7 @@ YY_DECL
 	{
 #line 24 "c.l"
 
-#line 734 "lex.yy.c"
+#line 733 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -879,15 +879,13 @@ case 18:
 YY_RULE_SETUP
 #line 45 "c.l"
 {
-                        char name[32] = "";
-                        snprintf(name, 32,"%s", yytext);
                         strncpy(yylval.name, yytext, 32);
                         return (tID);
                     }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 51 "c.l"
+#line 49 "c.l"
 {	
 						int conv = (int)strtol(yytext+2,NULL, 16);// +2 for removing the 0x at the beginning of the string and only maintaint the hexadecimal part (!WARNING POINTER ARITHMETIC!)
 						yylval.val = conv;
@@ -896,7 +894,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 57 "c.l"
+#line 55 "c.l"
 {	
 						int conv = (int)strtol(yytext,NULL, 10);
 						yylval.val = conv;
@@ -905,120 +903,120 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 62 "c.l"
+#line 60 "c.l"
 return (tADD);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 63 "c.l"
+#line 61 "c.l"
 return (tSUB);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 64 "c.l"
+#line 62 "c.l"
 return (tMUL);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 65 "c.l"
+#line 63 "c.l"
 return (tDIV);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 66 "c.l"
+#line 64 "c.l"
 return (tLT);
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 67 "c.l"
+#line 65 "c.l"
 return (tGT);
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 68 "c.l"
+#line 66 "c.l"
 return (tNE);
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 69 "c.l"
+#line 67 "c.l"
 return (tEQ);
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 70 "c.l"
+#line 68 "c.l"
 return (tGE);
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 71 "c.l"
+#line 69 "c.l"
 return (tLE);
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 72 "c.l"
+#line 70 "c.l"
 return (tASSIGN);
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 73 "c.l"
+#line 71 "c.l"
 return (tAND);
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 74 "c.l"
+#line 72 "c.l"
 return (tAMPER);
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 75 "c.l"
+#line 73 "c.l"
 return (tOR);
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 76 "c.l"
+#line 74 "c.l"
 return (tNOT);
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 77 "c.l"
+#line 75 "c.l"
 return (tLBRACE);
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 78 "c.l"
+#line 76 "c.l"
 return (tRBRACE);
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 79 "c.l"
+#line 77 "c.l"
 return (tLPAR);
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 80 "c.l"
+#line 78 "c.l"
 return (tRPAR);
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 81 "c.l"
+#line 79 "c.l"
 return (tSEMI);
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 82 "c.l"
+#line 80 "c.l"
 return (tCOMMA);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 83 "c.l"
+#line 81 "c.l"
 return (tERROR);
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 84 "c.l"
+#line 82 "c.l"
 ECHO;
 	YY_BREAK
-#line 1022 "lex.yy.c"
+#line 1019 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(C_MULTI_LINE_COMMENT):
 case YY_STATE_EOF(C_SINGLE_LINE_COMMENT):
@@ -1988,7 +1986,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 84 "c.l"
+#line 82 "c.l"
 
 
 
