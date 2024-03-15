@@ -1,13 +1,12 @@
 %option noyywrap
 %option noinput
 %option nounput
-
+%option yylineno
 %{
 	#include <stdio.h> 
 	#include <stdlib.h> 
     #include <stdio.h>
     #include "c.tab.h"
-    #include "manip.h"
 	union yyvalue {
 		int value;
 	};

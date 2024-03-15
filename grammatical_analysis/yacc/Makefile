@@ -11,8 +11,8 @@ lex.yy.c: c.l c.tab.h
 c: lex.yy.c c.tab.c c.tab.h
 	gcc -o c c.tab.c lex.yy.c
 
-test: clean all
-	./c < ./samples/ok10.c
+test: all 
+	./test.sh
 
 clean:
 	rm c c.tab.c lex.yy.c c.tab.h c.output 2> /dev/null

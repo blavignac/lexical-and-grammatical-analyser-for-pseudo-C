@@ -1,0 +1,30 @@
+tVOID
+tID: 'main'
+tLPAR
+tVOID
+tRPAR
+tLBRACE
+tINT
+tID: 'a'
+tSEMI
+tID: 'a'
+tASSIGN
+tNB: '123[0x7b]'
+tADD
+tNB: '321[0x141]'
+tMUL
+tNB: '4[0x4]'
+tDIV
+tNB: '2[0x2]'
+tSUB
+tNB: '1[0x1]'
+tSEMI
+tIF
+tLPAR
+tID: 'a'
+tEQ
+tNB: '1[0x1]'
+tRPAR
+tLBRACE
+tRBRACE
+tRBRACE
