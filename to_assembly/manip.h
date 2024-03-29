@@ -33,6 +33,7 @@ table * init_table();
 void push(table * t,table_entry add);
 table_entry * pop(table * t);
 table_entry * lookup(table *t, char * entry_name);
+table_entry * top(table * t);
 
 
 #endif

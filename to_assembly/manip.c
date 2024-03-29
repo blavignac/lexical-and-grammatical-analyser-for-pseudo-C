@@ -21,9 +21,11 @@ char is_empty(table * t){
 
 
 void table_print(table * t){
+	printf("\n\n-----------------------------Table print-------------------------------\n");
     for (int i = 0; i < t->current_index; i++)  {
-        printf("\n\nTable entry %d is: name = %s, val = %d\n\n ",i,t->data[i].entry_name,t->data[i].entry_value);
+        printf("|-------------- Table entry %d is: name = %s, val = %d -----------------|\n",i,t->data[i].entry_name,t->data[i].entry_value);
     }
+	printf("--------------------------------------------------------------------------\n");
 }
 
 table_entry * pop(table * t){
@@ -31,6 +33,14 @@ table_entry * pop(table * t){
         return NULL;
     }else{
         t->current_index -= 1;
+        return &(t->data[t->current_index]);
+    }
+}
+
+table_entry * top(table * t){
+    if (is_empty(t)){
+        return NULL;
+    }else{
         return &(t->data[t->current_index]);
     }
 }

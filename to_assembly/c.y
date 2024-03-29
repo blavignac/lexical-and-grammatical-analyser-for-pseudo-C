@@ -65,6 +65,9 @@ type:
 
 block:
         tLBRACE expression_list tRBRACE
+				{
+					printf("$ assembly jump if condition not verified: %d -- jump: $\n", yylineno);
+				}
 ;
 
 expression_list:
@@ -107,16 +110,37 @@ func_call_param:
 ;
 
 assign:
-        tID tASSIGN arithmetic tSEMI {printf("$ line no: %d -- var assign: %s $\n", yylineno,$1);}
+        tID tASSIGN arithmetic tSEMI {
+					printf("$ line no: %d -- var assign assembly instruction: $", yylineno);
+					table_entry * entry = lookup(symbol_table,$1);
+					if (entry == NULL) {
+						printf("erreur : variable non déclarée\n");
+					}
+					table_entry * value = pop(temp_table);
+
+					if(value == NULL) {
+						printf("erreur expression assign\n\n");
+					}
+
+					if(value->entry_type == constant) {
+						printf("AFC %s #%d\n",entry->entry_name,value->entry_value);
+					}
+					else if(value->entry_type == var) {
+						printf("AFC %s %s\n",entry->entry_name,value->entry_name);
+					}
+
+					entry->entry_value = value->entry_value;
+				}
 ;
 
 dec_id: 
         tID {
-                printf("$ line no: %d -- var dec assembly instruction: ", yylineno);
+                printf("$ line no: %d -- var declaration assembly instruction: ", yylineno);
                 table_entry entry;
                 strncpy(entry.entry_name, $1, 16);
                 entry.entry_type = var;
                 push(symbol_table,entry); 
+								printf("LDR %s =%p \n", $1, &(lookup(symbol_table,$1)->entry_value));
         }
 ;
 
@@ -135,16 +159,45 @@ while:
 ;
 
 arithmetic:  
-        arithmetic tADD arithmetic 
-    |   arithmetic tMUL arithmetic
+        arithmetic tADD arithmetic {
+					table_entry * val1 = pop(temp_table);
+					table_entry * val2 = pop(temp_table);
+					if (val2 == NULL || val1 == NULL) {
+						printf("erreur val2 null\n");
+					}
+					table_entry result;
+
+
+					printf("$ line no: %d -- addition assembly instruction : ADD %p %p\n",yylineno,&(val1->entry_value),&(val2->entry_value));
+
+					val1->entry_value = val1->entry_value + val2->entry_value;
+					val1->entry_type=var;
+					strncpy(val1->entry_name,"res_addition",16);
+					printf("$ line no: %d -- resultat addition dans : %p\n",yylineno, &(val1->entry_value));
+					
+					push(temp_table,*val1);
+				}
+    |   arithmetic tMUL arithmetic 
     |   arithmetic tSUB arithmetic
     |   arithmetic tDIV arithmetic
-    |   value
+    |   value 
 ;
 
 value:
-        tID         {printf("$ line no: %d -- val: %s $\n", yylineno,$1);}
-    |   tNB         {printf("$ line no: %d -- num: %d $\n", yylineno,$1);}
+        tID         { 
+											table_entry * entry = lookup(symbol_table,$1);
+											push(temp_table,*entry);
+											printf("$ line no: %d -- assembly known value %s added in temporary : %p $\n",yylineno, entry->entry_name, &(top(temp_table)->entry_value));
+											
+										}
+    |   tNB         {
+											table_entry entry;
+											entry.entry_value = $1;
+											entry.entry_type = constant;
+											push(temp_table,entry);
+											printf("$ line no: %d -- assembly affectation temporary number: AFC %p %d $\n",yylineno, &(top(temp_table)->entry_value),$1);
+											
+										}
     |   func_call   
 ;
 
@@ -158,7 +211,12 @@ if_else:
 
 bool:
         value 
-    |   bool tEQ bool
+    |   bool tEQ bool {
+												table_entry * val1 = pop(temp_table);
+												table_entry * val2 = pop(temp_table);
+												printf("$ line no: %d -- assembly condition equal : cmp %p %p $\n",yylineno,&(val1->entry_value),&(val2->entry_value));
+												printf("$ line no: %d -- assembly condition equal : BEQ jump $\n",yylineno);
+											}
     |   bool tNE bool
     |   bool tGT bool
     |   bool tGE bool
