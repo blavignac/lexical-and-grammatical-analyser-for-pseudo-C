@@ -13,7 +13,6 @@ typedef struct table_entry
 {
     char entry_name[16];
     type entry_type;
-    int entry_value;
     
 } table_entry;
 
@@ -31,9 +30,14 @@ void table_print(table * t);
 table * init_table();
 
 void push(table * t,table_entry add);
+
 table_entry * pop(table * t);
-table_entry * lookup(table *t, char * entry_name);
+
+int lookup(table *t, char * entry_name);
+
 table_entry * top(table * t);
+
+int top_index_temp(table *t);
 
 
 #endif

@@ -2,6 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "manip.h"
+    long asm_line_no = 0;
     void yyerror (const char *);    
     extern int yylineno;
     table * symbol_table;
@@ -40,8 +41,166 @@ statement:
     |   main
 ;
 
+main:
+        type tMAIN tLPAR tVOID tRPAR block  {}
+;
+
+type:
+        tINT    {}
+    |   tVOID   {}
+;
+
+block:
+        tLBRACE expression_list tRBRACE
+;
+
+id_list:
+        %empty
+    |   tCOMMA dec_id id_list
+;
+
+dec_id: 
+        tID {   
+                int var_exists = lookup(symbol_table,$1);
+		if (var_exists != -1) {
+			printf("%d: error : variable already declared with that name %s\n", yylineno, $1);
+		}
+                table_entry entry;
+                strncpy(entry.entry_name, $1, 16);
+                entry.entry_type = var;
+		printf("%d: AFC %i 0 \n",yylineno, symbol_table->current_index);
+                push(symbol_table,entry); 
+        }
+;
+
+var_dec:
+        tINT dec_id id_list tSEMI {}
+;
+
+var_dec_assign_arith:
+        tINT tID tASSIGN arithmetic tSEMI{
+                                        int var_exists = lookup(symbol_table,$2);
+                                        if (var_exists != -1) {
+                                                printf("%d: error : variable already declared with that name %s\n",yylineno, $2);
+                                        }
+
+                                        table_entry entry;
+                                        strncpy(entry.entry_name, $2, 16);
+                                        entry.entry_type = var;
+                                        push(symbol_table,entry); 
+		                        printf("%d: AFC %i 0 \n", yylineno, symbol_table->current_index);
+                                        printf("%d: COP %d %d\n", yylineno, symbol_table->current_index, top_index_temp(temp_table));
+                                        table_entry * value = pop(temp_table);
+        }
+
+/* assign:
+        tID tASSIGN tNB tSEMI {
+					int entry = lookup(symbol_table,$1);
+					if (entry == -1) {
+						printf("%d: erreur : variable non déclarée\n", yylineno);
+					}
+					
+
+					printf("%d: AFC %d %d\n",yylineno,  entry, $3);
+				}
+; */
+
+assign_arith:
+        tID tASSIGN arithmetic tSEMI {
+					int entry = lookup(symbol_table,$1);
+					if (entry == -1) {
+						printf("%d: erreur : variable non déclarée\n",yylineno);
+					}
+					
+
+					printf("%d: COP %d %d\n", yylineno, entry, top_index_temp(temp_table));
+                                        table_entry * value = pop(temp_table);
+				}
+;
+
+/* assign_val:
+        tID tASSIGN tID tSEMI {
+
+                                        int var = lookup(symbol_table,$3);
+					if (var == -1) {
+						printf("%d: error: variable %s not declared\n", yylineno, $3);
+					}
+
+					int entry = lookup(symbol_table,$1);
+					if (entry == -1) {
+						printf("%d: error: variable %s not declared\n", yylineno, $1);
+					}
+					
+
+					printf("%d: COP %d %d\n", yylineno, entry, var);
+				}
+; */
+
+arithmetic:  
+        arithmetic tADD arithmetic {
+					int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: ADD (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+				}
+    |   arithmetic tMUL arithmetic {
+					int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: MUL (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+				}
+    |   arithmetic tSUB arithmetic {
+					int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: SUB (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+				}
+    |   arithmetic tDIV arithmetic {
+					int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: DIV (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+				}
+    |   value 
+;
+
+value:
+        tID    { 
+                        	int entry = lookup(symbol_table,$1);
+                        	push(temp_table, symbol_table->data[entry]);
+                                int i = top_index_temp(temp_table);
+                                printf("%d: COP %d %d\n",yylineno ,i , entry);
+
+                }
+    |   tNB    {
+	 			table_entry entry;
+				push(temp_table,entry);
+                                int i = top_index_temp(temp_table);
+                                printf("%d: AFC %d %d\n", yylineno, i,$1);
+				
+		}
+    |   func_call   
+;
+
+if:
+        tIF tLPAR condition tRPAR block {}
+;
+
+if_else:
+        tIF tLPAR condition tRPAR block tELSE block {printf("%d:-- if_else $\n",yylineno);}
+;
+
+
+while:
+        tWHILE tLPAR condition tRPAR block {}
+;
+
 func_dec:
-        tINT tID tLPAR param_list tRPAR block  {printf("$ line no: %d -- function %s declared $\n", yylineno,$2);}
+        tINT tID tLPAR param_list tRPAR block  {}
+;
+
+param:
+        type tID
 ;
 
 param_list:
@@ -50,39 +209,22 @@ param_list:
     |   param tCOMMA param_list
 ;
 
-param:
-        type tID
-;
-
-main:
-        type tMAIN tLPAR tVOID tRPAR block  {}
-;
-
-type:
-        tINT    {printf("$ line no: %d -- int $\n", yylineno);}
-    |   tVOID   {printf("$ line no: %d -- void $\n", yylineno);}
-;
-
-block:
-        tLBRACE expression_list tRBRACE
-				{
-					printf("$ assembly jump if condition not verified: %d -- jump: $\n", yylineno);
-				}
-;
-
 expression_list:
         %empty
     |   expression expression_list
 ;
 
 return:
-        tRETURN arithmetic tSEMI    {printf("$ line no: %d -- return $\n", yylineno);}
-    |   tRETURN bool tSEMI          {printf("$ line no: %d -- return $\n", yylineno);}
+        tRETURN arithmetic tSEMI    {}
+    |   tRETURN bool tSEMI          {}
 ;
 
 expression:
         var_dec
-    |   assign
+    |   var_dec_assign_arith
+    /* |   assign */
+    |   assign_arith
+    /* |   assign_val */
     |   if
     |   if_else
     |   while
@@ -91,11 +233,11 @@ expression:
 ;
 
 sys_fonc_call:
-        tPRINT tLPAR arithmetic tRPAR tSEMI {printf("$ line no: %d -- printf fonction call $\n", yylineno);}
+        tPRINT tLPAR arithmetic tRPAR tSEMI {}
 ;
 
 func_call:
-        tID tLPAR func_call_param_list tRPAR  {printf("$ line no: %d -- %s fonction call $\n", yylineno, $1);}
+        tID tLPAR func_call_param_list tRPAR  {}
 ;
 
 func_call_param_list:
@@ -109,122 +251,91 @@ func_call_param:
     |   arithmetic
 ;
 
-assign:
-        tID tASSIGN arithmetic tSEMI {
-					printf("$ line no: %d -- var assign assembly instruction: $", yylineno);
-					table_entry * entry = lookup(symbol_table,$1);
-					if (entry == NULL) {
-						printf("erreur : variable non déclarée\n");
-					}
-					table_entry * value = pop(temp_table);
-
-					if(value == NULL) {
-						printf("erreur expression assign\n\n");
-					}
-
-					if(value->entry_type == constant) {
-						printf("AFC %s #%d\n",entry->entry_name,value->entry_value);
-					}
-					else if(value->entry_type == var) {
-						printf("AFC %s %s\n",entry->entry_name,value->entry_name);
-					}
-
-					entry->entry_value = value->entry_value;
-				}
-;
-
-dec_id: 
-        tID {
-                printf("$ line no: %d -- var declaration assembly instruction: ", yylineno);
-                table_entry entry;
-                strncpy(entry.entry_name, $1, 16);
-                entry.entry_type = var;
-                push(symbol_table,entry); 
-								printf("LDR %s =%p \n", $1, &(lookup(symbol_table,$1)->entry_value));
-        }
-;
-
-id_list:
-        %empty
-    |   tCOMMA dec_id id_list
-;
-
-var_dec:
-        tINT dec_id id_list tSEMI {}
-;
 
 
-while:
-        tWHILE tLPAR condition tRPAR block {printf("$ line no: %d -- while $\n", yylineno);}
-;
-
-arithmetic:  
-        arithmetic tADD arithmetic {
-					table_entry * val1 = pop(temp_table);
-					table_entry * val2 = pop(temp_table);
-					if (val2 == NULL || val1 == NULL) {
-						printf("erreur val2 null\n");
-					}
-					table_entry result;
 
 
-					printf("$ line no: %d -- addition assembly instruction : ADD %p %p\n",yylineno,&(val1->entry_value),&(val2->entry_value));
-
-					val1->entry_value = val1->entry_value + val2->entry_value;
-					val1->entry_type=var;
-					strncpy(val1->entry_name,"res_addition",16);
-					printf("$ line no: %d -- resultat addition dans : %p\n",yylineno, &(val1->entry_value));
-					
-					push(temp_table,*val1);
-				}
-    |   arithmetic tMUL arithmetic 
-    |   arithmetic tSUB arithmetic
-    |   arithmetic tDIV arithmetic
-    |   value 
-;
-
-value:
-        tID         { 
-											table_entry * entry = lookup(symbol_table,$1);
-											push(temp_table,*entry);
-											printf("$ line no: %d -- assembly known value %s added in temporary : %p $\n",yylineno, entry->entry_name, &(top(temp_table)->entry_value));
-											
-										}
-    |   tNB         {
-											table_entry entry;
-											entry.entry_value = $1;
-											entry.entry_type = constant;
-											push(temp_table,entry);
-											printf("$ line no: %d -- assembly affectation temporary number: AFC %p %d $\n",yylineno, &(top(temp_table)->entry_value),$1);
-											
-										}
-    |   func_call   
-;
-
-if:
-        tIF tLPAR condition tRPAR block {printf("$ line no: %d -- if $\n", yylineno);}
-;
-
-if_else:
-        tIF tLPAR condition tRPAR block tELSE block {printf("$ line no: %d -- if_else $\n", yylineno);}
-;
 
 bool:
         value 
-    |   bool tEQ bool {
-												table_entry * val1 = pop(temp_table);
-												table_entry * val2 = pop(temp_table);
-												printf("$ line no: %d -- assembly condition equal : cmp %p %p $\n",yylineno,&(val1->entry_value),&(val2->entry_value));
-												printf("$ line no: %d -- assembly condition equal : BEQ jump $\n",yylineno);
-											}
-    |   bool tNE bool
-    |   bool tGT bool
-    |   bool tGE bool
-    |   bool tLT bool
-    |   bool tLE bool
-    |   bool tAND bool
-    |   bool tOR bool
-    |   tNOT bool
+    |   bool tEQ bool  {
+
+                                        int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
+			}
+    |   bool tNE bool  {
+
+                                        int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
+                                        printf("%d: NOT  %d %d\n", yylineno,i2, i2);
+
+			}
+    |   bool tGT bool   {
+
+                                        int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: SUP  %d %d %d\n", yylineno,i2, i2, i1);
+			}
+    |   bool tLT bool   {
+
+                                        int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        pop(temp_table);
+                                        printf("%d: INF  %d %d %d\n", yylineno,i2, i2, i1);
+			}
+    |   bool tGE bool   {               
+                                        table_entry entry;
+				        push(temp_table,entry);
+                                        table_entry entry1;
+				        push(temp_table,entry1);
+                                        int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        int i3 = top_index_temp(temp_table) - 2;
+                                        int i4 = top_index_temp(temp_table) - 3;
+                                        printf("%d: SUP  %d %d %d\n", yylineno,i1, i3, i4);
+                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
+                                        printf("%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
+                                        pop(temp_table);
+                                        pop(temp_table);
+                                        pop(temp_table);
+                        }
+    |   bool tLE bool   {
+                                        table_entry entry;
+				        push(temp_table,entry);
+                                        table_entry entry1;
+				        push(temp_table,entry1);
+                                        int i1 = top_index_temp(temp_table);
+                                        int i2 = top_index_temp(temp_table) - 1;
+                                        int i3 = top_index_temp(temp_table) - 2;
+                                        int i4 = top_index_temp(temp_table) - 3;
+                                        printf("%d: INF  %d %d %d\n", yylineno,i1, i3, i4);
+                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
+                                        printf("%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
+                                        pop(temp_table);
+                                        pop(temp_table);
+                                        pop(temp_table);
+                        }
+    |   bool tAND bool  {
+                                      int i1 = top_index_temp(temp_table);
+                                      int i2 = top_index_temp(temp_table) - 1;
+                                      pop(temp_table);
+                                      printf("%d: AND  %d %d %d\n", yylineno,i2, i2, i1);  
+                        }
+    |   bool tOR bool   {
+                                      int i1 = top_index_temp(temp_table);
+                                      int i2 = top_index_temp(temp_table) - 1;
+                                      pop(temp_table);
+                                      printf("%d: OR  %d %d %d\n", yylineno,i2, i2, i1);  
+                        }
+    |   tNOT bool       {
+                                        int i1 = top_index_temp(temp_table);
+                                        printf("%d: NOT  %d %d\n", yylineno,i1, i1);
+                        }
 ;
 
 condition:
@@ -242,6 +353,7 @@ void yyerror(const char *msg) {
 int main(void) {
   symbol_table = init_table();
   temp_table = init_table();
+  FILE* fp = fopen("asm.txt", "w");
   yyparse();
   table_print(symbol_table);
 

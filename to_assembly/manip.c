@@ -13,6 +13,9 @@ void push(table * t,table_entry add){
     t->current_index += 1;
 }
 
+int top_index_temp(table *t){
+    return (t->current_index + TABLE_SIZE);
+}
 
 
 char is_empty(table * t){
@@ -23,7 +26,7 @@ char is_empty(table * t){
 void table_print(table * t){
 	printf("\n\n-----------------------------Table print-------------------------------\n");
     for (int i = 0; i < t->current_index; i++)  {
-        printf("|-------------- Table entry %d is: name = %s, val = %d -----------------|\n",i,t->data[i].entry_name,t->data[i].entry_value);
+        printf("|-------------- Table entry %d is: name = %s-----------------|\n",i,t->data[i].entry_name);
     }
 	printf("--------------------------------------------------------------------------\n");
 }
@@ -45,12 +48,12 @@ table_entry * top(table * t){
     }
 }
 
-table_entry * lookup(table *t, char * entry_name){
+int lookup(table *t, char * entry_name){
     for(int i = 0; i < t->current_index; i++){
         if (strncmp(t->data[i].entry_name, entry_name, 16) == 0 )
         {
-            return &(t->data[i]);
+            return i;
         }
     }
-    return NULL;
+    return -1;
 }

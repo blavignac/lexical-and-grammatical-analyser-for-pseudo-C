@@ -4,7 +4,7 @@ void main(void) {
 	a = b+50;
 	c=b;
 
-	if(c==b) {
+	if(c==b || a!=b || b==a) {
 		c = c+10;
 	}
 }

@@ -12,7 +12,8 @@ c: lex.yy.c c.tab.c c.tab.h manip.c manip.h
 	gcc -o c c.tab.c lex.yy.c manip.c
 
 test: all 
+	./c < test1.c
 	
 
 clean:
-	rm c c.tab.c lex.yy.c c.tab.h c.output 2> /dev/null
+	rm c c.tab.c lex.yy.c c.tab.h c.s c.output 2> /dev/null
