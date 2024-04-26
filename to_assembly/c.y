@@ -2,11 +2,48 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "manip.h"
+    #define INSTRUCTION_SIZE 128
     long asm_line_no = 0;
     void yyerror (const char *);    
     extern int yylineno;
     table * symbol_table;
     table * temp_table;
+    
+    FILE* fptr ;
+
+    typedef struct instruction_list{
+        int max_instructions;
+        int current_index;
+        char ** instructions;
+    } instruction_list;
+    
+    instruction_list * inst_list;
+
+    instruction_list * get_instruction_list(int max_ins){
+        instruction_list* t =  (instruction_list *)malloc(sizeof(instruction_list));
+        t->current_index = 0;
+        t->max_instructions=max_ins;
+        t->instructions = (char**)malloc(sizeof(char*)*max_ins);
+        return t;
+    }
+
+    char * add_instruction(instruction_list * list){
+        char* inst = (char *)malloc(sizeof(char)*INSTRUCTION_SIZE);
+        int index = list->current_index;
+        list->instructions[index] = inst;
+        list->current_index++;
+        return list->instructions[index];
+    }
+
+    void patch_instruction_list(instruction_list * list, int jmp){
+        for(int i = list->current_index -1; i > 0; i--){
+                char str[]=".label";
+                if(strncmp(list->instructions[i],str,6) == 0){
+                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMP %d %d\n",top_index_temp(temp_table), jmp);
+                        table_entry * value = pop(temp_table);
+                }
+        }
+    }
 %}
 
 %code provides {
@@ -14,15 +51,25 @@
     void yyerror (const char *);
 }
 
-%union { char name[32]; int val;}
+%union { char name[32]; int val; int nb;}
 
-%token tMUL tVOID tEQ tAMPER tMAIN tSEMI tLPAR tRPAR tRBRACE tLBRACE tADD tCOMMA tINT tSUB tELSE tDIV tIF tAND tNE tGT tGE tLT tLE tOR tWHILE tRETURN tASSIGN tNOT tERROR tPRINT
+%token tMUL tVOID tEQ tAMPER tMAIN tSEMI tLPAR tRPAR tRBRACE tLBRACE tADD tCOMMA tINT tSUB tELSE tDIV tAND tNE tGT tGE tLT tLE tOR tWHILE tRETURN tASSIGN tNOT tERROR tPRINT
 %token <name> tID
 %token <val> tNB
+%token <nb> tIF
 
-%left tLT tGT tEQ tNE tLE tGE
+%nonassoc tELSE
+%left tCOMMA
+%right tASSIGN 
+%left tOR
+%left tAND
+%left tEQ
+%left tLT tGT tNE tLE tGE
 %left tADD tSUB
 %left tMUL tDIV
+%left tNOT tAMPER 
+%left tLPAR
+%right tRPAR
 
 
 %%
@@ -42,7 +89,7 @@ statement:
 ;
 
 main:
-        type tMAIN tLPAR tVOID tRPAR block  {}
+        type tMAIN tLPAR tVOID tRPAR main_block  {}
 ;
 
 type:
@@ -51,6 +98,10 @@ type:
 ;
 
 block:
+        tLBRACE expression_list tRBRACE {snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"block \n");}
+;
+
+main_block:
         tLBRACE expression_list tRBRACE
 ;
 
@@ -63,12 +114,12 @@ dec_id:
         tID {   
                 int var_exists = lookup(symbol_table,$1);
 		if (var_exists != -1) {
-			printf("%d: error : variable already declared with that name %s\n", yylineno, $1);
+			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: error : variable already declared with that name %s\n", yylineno, $1);
 		}
                 table_entry entry;
                 strncpy(entry.entry_name, $1, 16);
                 entry.entry_type = var;
-		printf("%d: AFC %i 0 \n",yylineno, symbol_table->current_index);
+		snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %i 0 \n",yylineno, symbol_table->current_index);
                 push(symbol_table,entry); 
         }
 ;
@@ -81,15 +132,15 @@ var_dec_assign_arith:
         tINT tID tASSIGN arithmetic tSEMI{
                                         int var_exists = lookup(symbol_table,$2);
                                         if (var_exists != -1) {
-                                                printf("%d: error : variable already declared with that name %s\n",yylineno, $2);
+                                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: error : variable already declared with that name %s\n",yylineno, $2);
                                         }
 
                                         table_entry entry;
                                         strncpy(entry.entry_name, $2, 16);
                                         entry.entry_type = var;
                                         push(symbol_table,entry); 
-		                        printf("%d: AFC %i 0 \n", yylineno, symbol_table->current_index);
-                                        printf("%d: COP %d %d\n", yylineno, symbol_table->current_index, top_index_temp(temp_table));
+		                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %i 0 \n", yylineno, symbol_table->current_index);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n", yylineno, symbol_table->current_index, top_index_temp(temp_table));
                                         table_entry * value = pop(temp_table);
         }
 
@@ -97,11 +148,11 @@ var_dec_assign_arith:
         tID tASSIGN tNB tSEMI {
 					int entry = lookup(symbol_table,$1);
 					if (entry == -1) {
-						printf("%d: erreur : variable non déclarée\n", yylineno);
+						snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: erreur : variable non déclarée\n", yylineno);
 					}
 					
 
-					printf("%d: AFC %d %d\n",yylineno,  entry, $3);
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %d %d\n",yylineno,  entry, $3);
 				}
 ; */
 
@@ -109,11 +160,11 @@ assign_arith:
         tID tASSIGN arithmetic tSEMI {
 					int entry = lookup(symbol_table,$1);
 					if (entry == -1) {
-						printf("%d: erreur : variable non déclarée\n",yylineno);
+						snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: erreur : variable non déclarée\n",yylineno);
 					}
 					
 
-					printf("%d: COP %d %d\n", yylineno, entry, top_index_temp(temp_table));
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n", yylineno, entry, top_index_temp(temp_table));
                                         table_entry * value = pop(temp_table);
 				}
 ;
@@ -123,72 +174,99 @@ assign_arith:
 
                                         int var = lookup(symbol_table,$3);
 					if (var == -1) {
-						printf("%d: error: variable %s not declared\n", yylineno, $3);
+						snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: error: variable %s not declared\n", yylineno, $3);
 					}
 
 					int entry = lookup(symbol_table,$1);
 					if (entry == -1) {
-						printf("%d: error: variable %s not declared\n", yylineno, $1);
+						snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: error: variable %s not declared\n", yylineno, $1);
 					}
 					
 
-					printf("%d: COP %d %d\n", yylineno, entry, var);
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n", yylineno, entry, var);
 				}
 ; */
 
 arithmetic:  
+    
         arithmetic tADD arithmetic {
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: ADD (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: ADD (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
 				}
     |   arithmetic tMUL arithmetic {
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: MUL (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: MUL (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
 				}
     |   arithmetic tSUB arithmetic {
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: SUB (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: SUB (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
 				}
     |   arithmetic tDIV arithmetic {
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: DIV (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: DIV (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
 				}
     |   value 
+    
 ;
 
 value:
-        tID    { 
+        func_call 
+     |   tID    { 
                         	int entry = lookup(symbol_table,$1);
                         	push(temp_table, symbol_table->data[entry]);
                                 int i = top_index_temp(temp_table);
-                                printf("%d: COP %d %d\n",yylineno ,i , entry);
+                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n",yylineno ,i , entry);
 
                 }
     |   tNB    {
 	 			table_entry entry;
 				push(temp_table,entry);
                                 int i = top_index_temp(temp_table);
-                                printf("%d: AFC %d %d\n", yylineno, i,$1);
+                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %d %d\n", yylineno, i,$1);
 				
 		}
-    |   func_call   
+      
 ;
 
-if:
-        tIF tLPAR condition tRPAR block {}
+expression:
+        var_dec
+    |   var_dec_assign_arith
+    /* |   assign */
+    |   assign_arith
+    /* |   assign_val */
+    |   if_else 
+    |   if      
+    |   while
+    |   sys_fonc_call
+    |   return
 ;
 
 if_else:
-        tIF tLPAR condition tRPAR block tELSE block {printf("%d:-- if_else $\n",yylineno);}
+        if tELSE block {snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d:-- if_else $\n",yylineno);}
 ;
+
+condition:
+        bool
+;
+
+
+if:
+        tIF tLPAR condition tRPAR {
+                $1 = inst_list->current_index;
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".label\n");
+        } block {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"if end \n");
+        } 
+
+
 
 
 while:
@@ -214,23 +292,15 @@ expression_list:
     |   expression expression_list
 ;
 
-return:
-        tRETURN arithmetic tSEMI    {}
-    |   tRETURN bool tSEMI          {}
+final:
+        arithmetic
+    |   bool
 ;
 
-expression:
-        var_dec
-    |   var_dec_assign_arith
-    /* |   assign */
-    |   assign_arith
-    /* |   assign_val */
-    |   if
-    |   if_else
-    |   while
-    |   sys_fonc_call
-    |   return
+return:
+        tRETURN arithmetic tSEMI    {}
 ;
+
 
 sys_fonc_call:
         tPRINT tLPAR arithmetic tRPAR tSEMI {}
@@ -240,38 +310,34 @@ func_call:
         tID tLPAR func_call_param_list tRPAR  {}
 ;
 
-func_call_param_list:
-        %empty 
-    |   func_call_param
+func_call_param_list: 
+        func_call_param
     |   func_call_param tCOMMA func_call_param_list
 ;
 
 func_call_param:
-        tID
-    |   arithmetic
+        %empty
+    |   final
 ;
-
-
 
 
 
 
 bool:
-        value 
-    |   bool tEQ bool  {
+        bool tEQ bool  {
 
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
 			}
     |   bool tNE bool  {
 
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
-                                        printf("%d: NOT  %d %d\n", yylineno,i2, i2);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: NOT  %d %d\n", yylineno,i2, i2);
 
 			}
     |   bool tGT bool   {
@@ -279,14 +345,14 @@ bool:
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: SUP  %d %d %d\n", yylineno,i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: SUP  %d %d %d\n", yylineno,i2, i2, i1);
 			}
     |   bool tLT bool   {
 
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        printf("%d: INF  %d %d %d\n", yylineno,i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: INF  %d %d %d\n", yylineno,i2, i2, i1);
 			}
     |   bool tGE bool   {               
                                         table_entry entry;
@@ -297,9 +363,9 @@ bool:
                                         int i2 = top_index_temp(temp_table) - 1;
                                         int i3 = top_index_temp(temp_table) - 2;
                                         int i4 = top_index_temp(temp_table) - 3;
-                                        printf("%d: SUP  %d %d %d\n", yylineno,i1, i3, i4);
-                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
-                                        printf("%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: SUP  %d %d %d\n", yylineno,i1, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
                                         pop(temp_table);
                                         pop(temp_table);
                                         pop(temp_table);
@@ -313,9 +379,9 @@ bool:
                                         int i2 = top_index_temp(temp_table) - 1;
                                         int i3 = top_index_temp(temp_table) - 2;
                                         int i4 = top_index_temp(temp_table) - 3;
-                                        printf("%d: INF  %d %d %d\n", yylineno,i1, i3, i4);
-                                        printf("%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
-                                        printf("%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: INF  %d %d %d\n", yylineno,i1, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
                                         pop(temp_table);
                                         pop(temp_table);
                                         pop(temp_table);
@@ -324,23 +390,22 @@ bool:
                                       int i1 = top_index_temp(temp_table);
                                       int i2 = top_index_temp(temp_table) - 1;
                                       pop(temp_table);
-                                      printf("%d: AND  %d %d %d\n", yylineno,i2, i2, i1);  
+                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AND  %d %d %d\n", yylineno,i2, i2, i1);  
                         }
     |   bool tOR bool   {
                                       int i1 = top_index_temp(temp_table);
                                       int i2 = top_index_temp(temp_table) - 1;
                                       pop(temp_table);
-                                      printf("%d: OR  %d %d %d\n", yylineno,i2, i2, i1);  
+                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: OR  %d %d %d\n", yylineno,i2, i2, i1);  
                         }
     |   tNOT bool       {
                                         int i1 = top_index_temp(temp_table);
-                                        printf("%d: NOT  %d %d\n", yylineno,i1, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: NOT  %d %d\n", yylineno,i1, i1);
                         }
+    |   value
 ;
 
-condition:
-        bool
-;
+
 
 %%
 
@@ -353,8 +418,13 @@ void yyerror(const char *msg) {
 int main(void) {
   symbol_table = init_table();
   temp_table = init_table();
-  FILE* fp = fopen("asm.txt", "w");
+  inst_list = get_instruction_list(1024);
+  
+  fptr = fopen("asm.txt", "w");
   yyparse();
   table_print(symbol_table);
+  fclose(fptr);
+  free(symbol_table);
+  free(temp_table);
 
 }

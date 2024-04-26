@@ -16,4 +16,7 @@ test: all
 	
 
 clean:
-	rm c c.tab.c lex.yy.c c.tab.h c.s c.output 2> /dev/null
+	rm c c.tab.c asm.txt lex.yy.c c.tab.h c.s c.output 2> /dev/null
+
+counter: c.y
+	bison -t -v -d -Wcounterexamples c.y
