@@ -1,9 +1,11 @@
 lines = open("asm", "r").readlines()
 asm = [l.split(" ") for l in lines]
 asm = [[l[0]] + [int(x) for x in l[1:]] for l in asm]
-mem = [0]*100
+mem = [0]*2048
 ip = 0
 offset = 0
+
+
 while ip<len(asm):
     if asm[ip][0] == "AFC":
         mem[asm[ip][1]] = asm[ip][2]
@@ -23,10 +25,16 @@ while ip<len(asm):
     elif asm[ip][0] == "DIV":
         mem[asm[ip][1]] = mem[asm[ip][2]] / mem[asm[ip][3]]
         ip+=1
+    elif asm[ip][0] == "EQ":
+        mem[asm[ip][1]] = (mem[asm[ip][2]] == mem[asm[ip][3]])
+        ip+=1
     elif asm[ip][0] == "JMP":
         ip = asm[ip][1]
     elif asm[ip][0] == "JMF":
-        if (asm[ip][1] == 0):
+        if (mem[asm[ip][1]] == 0):
             ip = asm[ip][2]
+        else:
+            ip+=1
+    elif asm[ip][0] == "PRINT":
         ip+=1
         

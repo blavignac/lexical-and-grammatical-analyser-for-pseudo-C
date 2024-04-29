@@ -28,20 +28,35 @@
     }
 
     char * add_instruction(instruction_list * list){
-        char* inst = (char *)malloc(sizeof(char)*INSTRUCTION_SIZE);
+        char* inst = (char *)calloc(INSTRUCTION_SIZE,sizeof(char));
         int index = list->current_index;
         list->instructions[index] = inst;
         list->current_index++;
         return list->instructions[index];
     }
 
-    void patch_instruction_list(instruction_list * list, int jmp){
+    void fill_jmf_instruction(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".label";
                 if(strncmp(list->instructions[i],str,6) == 0){
-                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMP %d %d\n",top_index_temp(temp_table), jmp);
+                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n",top_index_temp(temp_table), jmp);
                         table_entry * value = pop(temp_table);
                 }
+        }
+    }
+
+    void fill_jmp_instruction(instruction_list * list, int jmp){
+        for(int i = list->current_index -1; i > 0; i--){
+                char str[]=".label";
+                if(strncmp(list->instructions[i],str,6) == 0){
+                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMP %d\n", jmp);
+                }
+        }
+    }
+
+    void write_to_file(FILE * fptr, instruction_list * list){
+        for(int i = 0; i < list->current_index; i++){
+                fprintf(fptr, "%s", list->instructions[i]);
         }
     }
 %}
@@ -98,7 +113,7 @@ type:
 ;
 
 block:
-        tLBRACE expression_list tRBRACE {snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"block \n");}
+        tLBRACE expression_list tRBRACE {}
 ;
 
 main_block:
@@ -119,7 +134,7 @@ dec_id:
                 table_entry entry;
                 strncpy(entry.entry_name, $1, 16);
                 entry.entry_type = var;
-		snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %i 0 \n",yylineno, symbol_table->current_index);
+		snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %i 0\n", symbol_table->current_index);
                 push(symbol_table,entry); 
         }
 ;
@@ -138,9 +153,9 @@ var_dec_assign_arith:
                                         table_entry entry;
                                         strncpy(entry.entry_name, $2, 16);
                                         entry.entry_type = var;
+		                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %i 0\n",  symbol_table->current_index);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",  symbol_table->current_index, top_index_temp(temp_table));
                                         push(symbol_table,entry); 
-		                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %i 0 \n", yylineno, symbol_table->current_index);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n", yylineno, symbol_table->current_index, top_index_temp(temp_table));
                                         table_entry * value = pop(temp_table);
         }
 
@@ -152,7 +167,7 @@ var_dec_assign_arith:
 					}
 					
 
-					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %d %d\n",yylineno,  entry, $3);
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %d %d\n",  entry, $3);
 				}
 ; */
 
@@ -164,7 +179,7 @@ assign_arith:
 					}
 					
 
-					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n", yylineno, entry, top_index_temp(temp_table));
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n", entry, top_index_temp(temp_table));
                                         table_entry * value = pop(temp_table);
 				}
 ;
@@ -183,7 +198,7 @@ assign_arith:
 					}
 					
 
-					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n", yylineno, entry, var);
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",  entry, var);
 				}
 ; */
 
@@ -193,25 +208,25 @@ arithmetic:
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: ADD (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"ADD %d %d %d\n", i2, i2, i1);
 				}
     |   arithmetic tMUL arithmetic {
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: MUL (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"MUL %d %d %d\n", i2, i2, i1);
 				}
     |   arithmetic tSUB arithmetic {
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: SUB (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"SUB %d %d %d\n",  i2, i2, i1);
 				}
     |   arithmetic tDIV arithmetic {
 					int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: DIV (%d) (%d) (%d)\n", yylineno, i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"DIV %d %d %d\n",  i2, i2, i1);
 				}
     |   value 
     
@@ -223,14 +238,14 @@ value:
                         	int entry = lookup(symbol_table,$1);
                         	push(temp_table, symbol_table->data[entry]);
                                 int i = top_index_temp(temp_table);
-                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: COP %d %d\n",yylineno ,i , entry);
+                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",i , entry);
 
                 }
     |   tNB    {
 	 			table_entry entry;
 				push(temp_table,entry);
                                 int i = top_index_temp(temp_table);
-                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AFC %d %d\n", yylineno, i,$1);
+                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %d %d\n",  i,$1);
 				
 		}
       
@@ -250,7 +265,11 @@ expression:
 ;
 
 if_else:
-        if tELSE block {snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d:-- if_else $\n",yylineno);}
+        if {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".label\n");
+        } tELSE block {
+                fill_jmp_instruction(inst_list,inst_list->current_index+1);
+        } 
 ;
 
 condition:
@@ -260,14 +279,11 @@ condition:
 
 if:
         tIF tLPAR condition tRPAR {
-                $1 = inst_list->current_index;
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".label\n");
         } block {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"if end \n");
+                fill_jmf_instruction(inst_list,inst_list->current_index+1);
         } 
-
-
-
+;
 
 while:
         tWHILE tLPAR condition tRPAR block {}
@@ -303,7 +319,10 @@ return:
 
 
 sys_fonc_call:
-        tPRINT tLPAR arithmetic tRPAR tSEMI {}
+        tPRINT tLPAR arithmetic tRPAR tSEMI {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"PRINT %d\n",top_index_temp(temp_table));
+                table_entry * value = pop(temp_table);
+        }
 ;
 
 func_call:
@@ -329,15 +348,15 @@ bool:
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i2, i1);
 			}
     |   bool tNE bool  {
 
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i2, i1);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: NOT  %d %d\n", yylineno,i2, i2);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT  %d %d\n", i2, i2);
 
 			}
     |   bool tGT bool   {
@@ -345,14 +364,14 @@ bool:
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: SUP  %d %d %d\n", yylineno,i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"SUP  %d %d %d\n", i2, i2, i1);
 			}
     |   bool tLT bool   {
 
                                         int i1 = top_index_temp(temp_table);
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: INF  %d %d %d\n", yylineno,i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"INF  %d %d %d\n", i2, i2, i1);
 			}
     |   bool tGE bool   {               
                                         table_entry entry;
@@ -363,9 +382,9 @@ bool:
                                         int i2 = top_index_temp(temp_table) - 1;
                                         int i3 = top_index_temp(temp_table) - 2;
                                         int i4 = top_index_temp(temp_table) - 3;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: SUP  %d %d %d\n", yylineno,i1, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"SUP  %d %d %d\n", i1, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND  %d %d %d\n", i4, i2, i1);
                                         pop(temp_table);
                                         pop(temp_table);
                                         pop(temp_table);
@@ -379,9 +398,9 @@ bool:
                                         int i2 = top_index_temp(temp_table) - 1;
                                         int i3 = top_index_temp(temp_table) - 2;
                                         int i4 = top_index_temp(temp_table) - 3;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: INF  %d %d %d\n", yylineno,i1, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: EQ %d %d %d\n", yylineno,i2, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AND  %d %d %d\n", yylineno,i4, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"INF  %d %d %d\n", i1, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND  %d %d %d\n", i4, i2, i1);
                                         pop(temp_table);
                                         pop(temp_table);
                                         pop(temp_table);
@@ -390,17 +409,17 @@ bool:
                                       int i1 = top_index_temp(temp_table);
                                       int i2 = top_index_temp(temp_table) - 1;
                                       pop(temp_table);
-                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: AND  %d %d %d\n", yylineno,i2, i2, i1);  
+                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND  %d %d %d\n", i2, i2, i1);  
                         }
     |   bool tOR bool   {
                                       int i1 = top_index_temp(temp_table);
                                       int i2 = top_index_temp(temp_table) - 1;
                                       pop(temp_table);
-                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: OR  %d %d %d\n", yylineno,i2, i2, i1);  
+                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OR  %d %d %d\n", i2, i2, i1);  
                         }
     |   tNOT bool       {
                                         int i1 = top_index_temp(temp_table);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: NOT  %d %d\n", yylineno,i1, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT  %d %d\n", i1, i1);
                         }
     |   value
 ;
@@ -420,9 +439,10 @@ int main(void) {
   temp_table = init_table();
   inst_list = get_instruction_list(1024);
   
-  fptr = fopen("asm.txt", "w");
+  fptr = fopen("asm", "w");
   yyparse();
   table_print(symbol_table);
+  write_to_file(fptr,inst_list);
   fclose(fptr);
   free(symbol_table);
   free(temp_table);

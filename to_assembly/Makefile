@@ -11,8 +11,9 @@ lex.yy.c: c.l c.tab.h
 c: lex.yy.c c.tab.c c.tab.h manip.c manip.h
 	gcc -o c c.tab.c lex.yy.c manip.c
 
-test: all 
+test: all test1.c interpreter.py
 	./c < test1.c
+	python3 interpreter.py
 	
 
 clean:
