@@ -37,8 +37,8 @@
 
     void fill_jmf_instruction(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
-                char str[]=".label";
-                if(strncmp(list->instructions[i],str,6) == 0){
+                char str[]=".jmf";
+                if(strncmp(list->instructions[i],str,4) == 0){
                         snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n",top_index_temp(temp_table), jmp);
                         table_entry * value = pop(temp_table);
                 }
@@ -47,8 +47,8 @@
 
     void fill_jmp_instruction(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
-                char str[]=".label";
-                if(strncmp(list->instructions[i],str,6) == 0){
+                char str[]=".jmp";
+                if(strncmp(list->instructions[i],str,4) == 0){
                         snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMP %d\n", jmp);
                 }
         }
@@ -66,12 +66,12 @@
     void yyerror (const char *);
 }
 
-%union { char name[32]; int val; int nb;}
+%union { char name[32]; int val; int line;}
 
-%token tMUL tVOID tEQ tAMPER tMAIN tSEMI tLPAR tRPAR tRBRACE tLBRACE tADD tCOMMA tINT tSUB tELSE tDIV tAND tNE tGT tGE tLT tLE tOR tWHILE tRETURN tASSIGN tNOT tERROR tPRINT
+%token tMUL tVOID tEQ tAMPER tMAIN tSEMI tIF tLPAR tRPAR tRBRACE tLBRACE tADD tCOMMA tINT tSUB tELSE tDIV tAND tNE tGT tGE tLT tLE tOR tRETURN tASSIGN tNOT tERROR tPRINT
 %token <name> tID
 %token <val> tNB
-%token <nb> tIF
+%token <line> tWHILE
 
 %nonassoc tELSE
 %left tCOMMA
@@ -193,7 +193,7 @@ assign_arith:
 					}
 
 					int entry = lookup(symbol_table,$1);
-					if (entry == -1) {
+					if (entry == -1) {jm
 						snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: error: variable %s not declared\n", yylineno, $1);
 					}
 					
@@ -257,36 +257,51 @@ expression:
     /* |   assign */
     |   assign_arith
     /* |   assign_val */
-    |   if_else 
-    |   if      
+    |   branch  
     |   while
     |   sys_fonc_call
     |   return
 ;
 
+
+branch:
+        if {fill_jmf_instruction(inst_list,inst_list->current_index);}
+    |   if_else {}
+;
+
+if:
+        tIF tLPAR condition tRPAR {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmf\n");
+        } block 
+;
+
 if_else:
-        if {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".label\n");
-        } tELSE block {
-                fill_jmp_instruction(inst_list,inst_list->current_index+1);
+        if {    fill_jmf_instruction(inst_list,inst_list->current_index+1);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmp\n");
+        } tELSE block { 
+                fill_jmp_instruction(inst_list,inst_list->current_index+2);
         } 
 ;
+
+
+
+
 
 condition:
         bool
 ;
 
 
-if:
-        tIF tLPAR condition tRPAR {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".label\n");
-        } block {
-                fill_jmf_instruction(inst_list,inst_list->current_index+1);
-        } 
-;
-
 while:
-        tWHILE tLPAR condition tRPAR block {}
+        tWHILE tLPAR {
+                $1 = inst_list->current_index;
+        } condition {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmf\n");
+        } tRPAR block {
+                fill_jmf_instruction(inst_list,inst_list->current_index+1);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"JMP %d\n",$1);
+        }       
+
 ;
 
 func_dec:
@@ -388,7 +403,7 @@ bool:
                                         pop(temp_table);
                                         pop(temp_table);
                                         pop(temp_table);
-                        }
+                        }tIF
     |   bool tLE bool   {
                                         table_entry entry;
 				        push(temp_table,entry);

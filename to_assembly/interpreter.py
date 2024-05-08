@@ -36,5 +36,6 @@ while ip<len(asm):
         else:
             ip+=1
     elif asm[ip][0] == "PRINT":
+        print(mem[asm[ip][1]])
         ip+=1
         

@@ -1,8 +1,9 @@
 void main(void) {
-  int a = 10;
-  int k = 123456; 
+int a = 10;
 
-  print(a);
+while (a == 9){
 
-
+  print (a);
+}
+print(69);
 }
