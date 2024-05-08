@@ -1,9 +1,8 @@
 void main(void) {
-int a = 10;
-
-while (a == 9){
-
-  print (a);
-}
-print(69);
+  int b = 0;
+  while(b != 10){
+    b = b + 1;
+    print(b);
+  }
+  print(69);
 }

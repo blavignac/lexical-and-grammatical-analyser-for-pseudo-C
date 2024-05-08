@@ -28,6 +28,9 @@ while ip<len(asm):
     elif asm[ip][0] == "EQ":
         mem[asm[ip][1]] = (mem[asm[ip][2]] == mem[asm[ip][3]])
         ip+=1
+    elif asm[ip][0] == "NOT":
+        mem[asm[ip][1]] = not(mem[asm[ip][2]] )
+        ip+=1
     elif asm[ip][0] == "JMP":
         ip = asm[ip][1]
     elif asm[ip][0] == "JMF":

@@ -45,6 +45,16 @@
         }
     }
 
+    void fill_while_instruction(instruction_list * list, int jmp){
+        for(int i = list->current_index -1; i > 0; i--){
+                char str[]=".while";
+                if(strncmp(list->instructions[i],str,6) == 0){
+                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n",top_index_temp(temp_table), jmp);
+                        table_entry * value = pop(temp_table);
+                }
+        }
+    }
+
     void fill_jmp_instruction(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".jmp";
@@ -296,9 +306,9 @@ while:
         tWHILE tLPAR {
                 $1 = inst_list->current_index;
         } condition {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmf\n");
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".while\n");
         } tRPAR block {
-                fill_jmf_instruction(inst_list,inst_list->current_index+1);
+                fill_while_instruction(inst_list,inst_list->current_index+1);
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"JMP %d\n",$1);
         }       
 
@@ -371,7 +381,7 @@ bool:
                                         int i2 = top_index_temp(temp_table) - 1;
                                         pop(temp_table);
                                         snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i2, i1);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT  %d %d\n", i2, i2);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT %d %d\n", i2, i2);
 
 			}
     |   bool tGT bool   {
