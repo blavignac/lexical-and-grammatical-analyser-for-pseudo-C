@@ -1,8 +1,10 @@
 void main(void) {
-  int b = 0;
-  while(b != 10){
-    b = b + 1;
-    print(b);
+  int a = 10;
+
+  if(a == 10){
+    int b,c,d,e,f;
+    print(111);
+  } else {
+    print(222);
   }
-  print(69);
 }

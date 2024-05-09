@@ -12,7 +12,7 @@ typedef enum type {func, var, sys_func, constant} type;
 typedef struct table_entry
 {
     char entry_name[16];
-    type entry_type;
+    int val;
     
 } table_entry;
 
@@ -33,7 +33,7 @@ void push(table * t,table_entry add);
 
 table_entry * pop(table * t);
 
-int lookup(table *t, char * entry_name);
+int lookup(table *t, int depth, char * entry_name);
 
 table_entry * top(table * t);
 
