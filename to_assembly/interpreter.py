@@ -7,7 +7,12 @@ offset = 0
 
 
 while ip<len(asm):
-    if asm[ip][0] == "AFC":
+    if asm[ip][0][0] == ".":
+        ip+=1
+    elif asm[ip][0][0] == "error":
+        print(asm[ip])
+        exit(1)
+    elif asm[ip][0] == "AFC":
         mem[asm[ip][1]] = asm[ip][2]
         ip+=1
     elif asm[ip][0] == "COP":
@@ -27,6 +32,12 @@ while ip<len(asm):
         ip+=1
     elif asm[ip][0] == "EQ":
         mem[asm[ip][1]] = (mem[asm[ip][2]] == mem[asm[ip][3]])
+        ip+=1
+    elif asm[ip][0] == "INF":
+        mem[asm[ip][1]] = (mem[asm[ip][2]] < mem[asm[ip][3]])
+        ip+=1
+    elif asm[ip][0] == "SUP":
+        mem[asm[ip][1]] = (mem[asm[ip][2]] > mem[asm[ip][3]])
         ip+=1
     elif asm[ip][0] == "NOT":
         mem[asm[ip][1]] = not(mem[asm[ip][2]] )
