@@ -1,5 +1,5 @@
 
-void fill_jmf_instruction(instruction_list * list, int jmp){
+void fun(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".jmf";
                 if(strncmp(list->instructions[i],str,4) == 0){

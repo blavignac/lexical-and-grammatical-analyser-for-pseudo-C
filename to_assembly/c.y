@@ -53,8 +53,8 @@
                 if(strncmp(list->instructions[i],str,4) == 0){
                         pop(symbol_table);
                         char ** end;
-                        //int addr = strtol(list->instructions[i] + 4, end, 10);
-                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n", 123456789, jmp);
+                        int addr = atoi(list->instructions[i]+4);
+                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n", addr, jmp);
                 }
         }
     }
@@ -354,7 +354,7 @@ branch:
 
 if:
         tIF tLPAR condition tRPAR {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmf\n");
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmf %d\n", symbol_table->current_index-1);
         } block 
 ;
 
