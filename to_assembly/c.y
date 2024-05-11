@@ -151,6 +151,48 @@ main:
         } tLPAR tVOID tRPAR main_block  {}
 ;
 
+param_list:
+        %empty 
+    |   param
+    |   param tCOMMA param_list
+;
+
+param:
+        type tID {
+                int var_exists = lookup(symbol_table,depth,$2);
+		if (var_exists != -1) {
+			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function parameter already has that name %s\n", yylineno, $2);
+		}
+                table_entry entry;
+                strncpy(entry.entry_name, $2, 16);
+                entry.val = depth;
+                push(symbol_table,entry); 
+        }
+;
+
+
+func_call:
+        tID tLPAR func_call_param_list tRPAR  {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"CALsL\n");
+        }
+;
+
+func_call_param_list: 
+        %empty 
+    |   func_call_param func_call_param_list_mutiple_pattern
+;
+
+
+func_call_param_list_mutiple_pattern:
+        %empty
+    |   tCOMMA func_call_param func_call_param_list_mutiple_pattern
+;
+
+func_call_param:
+        arithmetic
+;
+
+
 func_dec:
         tINT tID {
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"\n");
@@ -184,36 +226,6 @@ func_dec:
         }
 ;
 
-param_list:
-        %empty 
-    |   param
-    |   param tCOMMA param_list
-;
-
-param:
-        type tID {
-                int var_exists = lookup(symbol_table,depth,$2);
-		if (var_exists != -1) {
-			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function parameter already has that name %s\n", yylineno, $2);
-		}
-                table_entry entry;
-                strncpy(entry.entry_name, $2, 16);
-                entry.val = depth;
-                push(symbol_table,entry); 
-        }
-;
-
-
-func_call:
-        tID tLPAR func_call_param_list tRPAR  {}
-;
-
-
-
-final:
-        arithmetic
-    |   bool
-;
 
 type:
         tINT    {}
@@ -228,15 +240,7 @@ main_block:
 ;
 
 
-func_call_param_list: 
-        func_call_param
-    |   func_call_param tCOMMA func_call_param_list
-;
 
-func_call_param:
-        %empty
-    |   final
-;
 id_list:
         %empty
     |   tCOMMA dec_id id_list
@@ -318,6 +322,84 @@ arithmetic:
                 int i2 = symbol_table->current_index - 1;
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"DIV %d %d %d\n",  i2, i2, i1);
         }
+    |   arithmetic tEQ arithmetic  {
+
+                                        pop(symbol_table);
+                                        int i1 = symbol_table->current_index;
+                                        int i2 = symbol_table->current_index - 1;
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i2, i1);
+			}
+    |   arithmetic tNE arithmetic  {
+
+                                        pop(symbol_table);
+                                        int i1 = symbol_table->current_index;
+                                        int i2 = symbol_table->current_index - 1;
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i2, i1);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT %d %d\n", i2, i2);
+
+			}
+    |   arithmetic tGT arithmetic   {
+
+                                        pop(symbol_table);
+                                        int i1 = symbol_table->current_index;
+                                        int i2 = symbol_table->current_index - 1;
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"SUP %d %d %d\n", i2, i2, i1);
+			}
+    |   arithmetic tLT arithmetic   {
+
+                                        pop(symbol_table);
+                                        int i1 = symbol_table->current_index;
+                                        int i2 = symbol_table->current_index - 1;
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"INF %d %d %d\n", i2, i2, i1);
+			}
+    |   arithmetic tGE arithmetic   {               
+                                        table_entry entry;
+				        push(symbol_table,entry);
+                                        table_entry entry1;
+				        push(symbol_table,entry1);
+                                        int i1 = symbol_table->current_index;
+                                        int i2 = symbol_table->current_index - 1;
+                                        int i3 = symbol_table->current_index - 2;
+                                        int i4 = symbol_table->current_index - 3;
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"SUP %d %d %d\n", i1, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND %d %d %d\n", i4, i2, i1);
+                                        pop(symbol_table);
+                                        pop(symbol_table);
+                                        pop(symbol_table);
+                        }
+    |   arithmetic tLE arithmetic   {
+                                        table_entry entry;
+				        push(symbol_table,entry);
+                                        table_entry entry1;
+				        push(symbol_table,entry1);
+                                        int i1 = symbol_table->current_index;
+                                        int i2 = symbol_table->current_index - 1;
+                                        int i3 = symbol_table->current_index - 2;
+                                        int i4 = symbol_table->current_index - 3;
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"INF %d %d %d\n", i1, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i3, i4);
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND %d %d %d\n", i4, i2, i1);
+                                        pop(symbol_table);
+                                        pop(symbol_table);
+                                        pop(symbol_table);
+                        }
+    |   arithmetic tAND arithmetic  {
+                                      int i1 = symbol_table->current_index;
+                                      int i2 = symbol_table->current_index - 1;
+                                      pop(symbol_table);
+                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND %d %d %d\n", i2, i2, i1);  
+                        }
+    |   arithmetic tOR arithmetic   {
+                                      int i1 = symbol_table->current_index;
+                                      int i2 = symbol_table->current_index - 1;
+                                      pop(symbol_table);
+                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OR %d %d %d\n", i2, i2, i1);  
+                        }
+    |   tNOT arithmetic       {
+                                        int i1 = symbol_table->current_index;
+                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT %d %d\n", i1, i1);
+                        }
     |   value 
     
 ;
@@ -360,7 +442,7 @@ branch:
 ;
 
 condition:
-        bool
+        arithmetic
 ;
 
 
@@ -412,89 +494,6 @@ sys_fonc_call:
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"PRINT %d\n",symbol_table->current_index);
         }
 ;
-
-bool:
-        bool tEQ bool  {
-
-                                        pop(symbol_table);
-                                        int i1 = symbol_table->current_index;
-                                        int i2 = symbol_table->current_index - 1;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i2, i1);
-			}
-    |   bool tNE bool  {
-
-                                        pop(symbol_table);
-                                        int i1 = symbol_table->current_index;
-                                        int i2 = symbol_table->current_index - 1;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i2, i1);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT %d %d\n", i2, i2);
-
-			}
-    |   bool tGT bool   {
-
-                                        pop(symbol_table);
-                                        int i1 = symbol_table->current_index;
-                                        int i2 = symbol_table->current_index - 1;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"SUP %d %d %d\n", i2, i2, i1);
-			}
-    |   bool tLT bool   {
-
-                                        pop(symbol_table);
-                                        int i1 = symbol_table->current_index;
-                                        int i2 = symbol_table->current_index - 1;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"INF %d %d %d\n", i2, i2, i1);
-			}
-    |   bool tGE bool   {               
-                                        table_entry entry;
-				        push(symbol_table,entry);
-                                        table_entry entry1;
-				        push(symbol_table,entry1);
-                                        int i1 = symbol_table->current_index;
-                                        int i2 = symbol_table->current_index - 1;
-                                        int i3 = symbol_table->current_index - 2;
-                                        int i4 = symbol_table->current_index - 3;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"SUP %d %d %d\n", i1, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND %d %d %d\n", i4, i2, i1);
-                                        pop(symbol_table);
-                                        pop(symbol_table);
-                                        pop(symbol_table);
-                        }
-    |   bool tLE bool   {
-                                        table_entry entry;
-				        push(symbol_table,entry);
-                                        table_entry entry1;
-				        push(symbol_table,entry1);
-                                        int i1 = symbol_table->current_index;
-                                        int i2 = symbol_table->current_index - 1;
-                                        int i3 = symbol_table->current_index - 2;
-                                        int i4 = symbol_table->current_index - 3;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"INF %d %d %d\n", i1, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"EQ %d %d %d\n", i2, i3, i4);
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND %d %d %d\n", i4, i2, i1);
-                                        pop(symbol_table);
-                                        pop(symbol_table);
-                                        pop(symbol_table);
-                        }
-    |   bool tAND bool  {
-                                      int i1 = symbol_table->current_index;
-                                      int i2 = symbol_table->current_index - 1;
-                                      pop(symbol_table);
-                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AND %d %d %d\n", i2, i2, i1);  
-                        }
-    |   bool tOR bool   {
-                                      int i1 = symbol_table->current_index;
-                                      int i2 = symbol_table->current_index - 1;
-                                      pop(symbol_table);
-                                      snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OR %d %d %d\n", i2, i2, i1);  
-                        }
-    |   tNOT bool       {
-                                        int i1 = symbol_table->current_index;
-                                        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"NOT %d %d\n", i1, i1);
-                        }
-    |   value
-;
-
 
 
 %%

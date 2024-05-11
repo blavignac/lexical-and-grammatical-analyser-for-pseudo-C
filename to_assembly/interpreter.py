@@ -49,6 +49,8 @@ while ip<len(asm):
             ip = asm[ip][2]
         else:
             ip+=1
+    elif asm[ip][0] == "CALL":
+        ip+=1
     elif asm[ip][0] == "PRINT":
         print(mem[asm[ip][1]])
         ip+=1

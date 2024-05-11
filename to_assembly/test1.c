@@ -1,19 +1,9 @@
-int f(){
-  int a;
+int f(int a,){
+  return a;
 }
 
 void main(void) {
-  int a = 10;
-
-while(a < 11){
-  int c,d,e;
-  if(a == 10){
-    int f;
-    print(222);
-  }
-  int f;
-  a = a + 1;
-  print(a);
-}
-int c,d,e;
+  int a = 10 +11;
+  int b;
+  //b = f(10);
 }

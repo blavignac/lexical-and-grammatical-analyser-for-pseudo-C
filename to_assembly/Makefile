@@ -3,7 +3,7 @@ all: c
 yacc: c.tab.c c.tab.h
 
 c.tab.c c.tab.h: c.y
-	bison -t -v -d c.y
+	bison -Wcounterexamples -t -v -d c.y
 
 lex.yy.c: c.l c.tab.h
 	flex c.l
