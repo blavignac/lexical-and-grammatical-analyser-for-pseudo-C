@@ -48,9 +48,9 @@ table_entry * top(table * t){
     }
 }
 
-int lookup(table *t, int depth, char * entry_name){
+int lookup(table *t, char * entry_name){
     for(int i = 0; i < t->current_index; i++){
-        if (strncmp(t->data[i].entry_name, entry_name, 16) == 0 && t->data[i].val <= depth)
+        if (strncmp(t->data[i].entry_name, entry_name, 16) == 0)
         {
             return i;
         }

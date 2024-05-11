@@ -58,6 +58,18 @@
         }
     }
 
+    int fill_ret_instruction(instruction_list * list, int jmp){
+        for(int i = list->current_index -1; i > 0; i--){
+                char str[]=".ret";
+                if(strncmp(list->instructions[i],str,4) == 0){
+                        char ** end;
+                        int addr = atoi(list->instructions[i]+4);
+                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"AFC %d %d\n", addr, jmp);
+                        return addr;
+                }
+        }
+    }
+
     int fill_while_instruction(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".while";
@@ -164,20 +176,50 @@ param_pattern:
 
 param:
         tINT tID {
-                int var_exists = lookup(symbol_table,depth,$2);
+                int var_exists = lookup(symbol_table,$2);
 		if (var_exists != -1) {
 			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function parameter already has that name %s\n", yylineno, $2);
 		}
                 table_entry entry;
                 strncpy(entry.entry_name, $2, 16);
-                entry.val = depth;
-                push(symbol_table,entry); 
+                push(symbol_table,entry);
+                func_table->data[func_table->current_index-1].num_param+=1;
         }
 ;
 
 func_call:
-        tID tLPAR func_call_param_list tRPAR  {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"CALL\n");
+        tID {   
+                int func_exits = lookup(func_table,$1);
+		if (func_exits == -1) {
+			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function not declared with name :%s\n", yylineno, $1);
+		}
+                
+                //verifier si void
+                //return value push
+                table_entry ret_val;
+		snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %i 0\n", symbol_table->current_index);
+                push(symbol_table,ret_val);
+
+                //return address push
+                table_entry ret_addr;
+	        snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".ret %d\n", symbol_table->current_index);
+                push(symbol_table,ret_addr);
+
+                
+        } tLPAR func_call_param_list tRPAR  {
+                int func_exits = lookup(func_table,$1);
+                printf("num_param is :%d\n",func_table->data[func_exits].num_param);
+                int offset = symbol_table->current_index - func_table->data[func_exits].num_param - 3;
+
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OFFSETP %d\n",offset);
+
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"CALL %d %d\n", func_table->data[func_exits].fun_line, symbol_table->current_index - func_table->data[func_exits].num_param - 2);
+
+                symbol_table->current_index = fill_ret_instruction(inst_list,inst_list->current_index);
+
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OFFSETN %d\n",offset);
+                
+
         }
 ;
 
@@ -207,13 +249,14 @@ func_signature :
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".%s\n",  $1);
                 printf("%s",$1);
 
-                int var_exists = lookup(func_table,depth,$1);
+                int var_exists = lookup(func_table,$1);
 		if (var_exists != -1) {
 			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function with this name already declared%s\n", yylineno, $1);
 		}
                 table_entry entry;
                 strncpy(entry.entry_name, $1, 16);
-                entry.val = inst_list->current_index;
+                entry.fun_line = inst_list->current_index;
+                entry.num_param = 0;
                 push(func_table,entry); 
 
                 symbol_table->current_index = 0;
@@ -222,15 +265,11 @@ func_signature :
         } tLPAR {
                 table_entry entry;
                 table_entry entry1;
-                strncpy(entry1.entry_name, "return_val", 16);
-                strncpy(entry.entry_name, "return_addr", 16);
-                entry.val = depth;
-                entry1.val = depth;
 
                 push(symbol_table,entry);
                 push(symbol_table,entry1);  
         } param_list tRPAR block  {
-
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"RET 1\n");
         }
 ;
 
@@ -258,13 +297,12 @@ id_list:
 
 dec_id: 
         tID {   
-                int var_exists = lookup(symbol_table,depth,$1);
+                int var_exists = lookup(symbol_table,$1);
 		if (var_exists != -1) {
 			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error line %d: variable already declared with that name %s\n", yylineno, $1);
 		}
                 table_entry entry;
                 strncpy(entry.entry_name, $1, 16);
-                entry.val = depth;
 		snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %i 0\n", symbol_table->current_index);
                 push(symbol_table,entry); 
         }
@@ -276,18 +314,17 @@ var_dec:
 
 var_dec_assign_arith:
         tINT tID tASSIGN {
-                int var_exists = lookup(symbol_table,depth,$2);
+                int var_exists = lookup(symbol_table,$2);
                 if (var_exists != -1) {
                         snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error line %d: variable already declared with that name %s\n",yylineno, $2);
                 }
                 table_entry entry;
                 strncpy(entry.entry_name, $2, 16);
-                entry.val = depth;
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %i 0\n",  symbol_table->current_index);
                 push(symbol_table,entry); 
         } arithmetic tSEMI{
                 pop(symbol_table);
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",  symbol_table->current_index-1, symbol_table->current_index);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP2 %d %d\n",  symbol_table->current_index-1, symbol_table->current_index);
                 
         }
 
@@ -295,12 +332,12 @@ var_dec_assign_arith:
 
 assign_arith:
         tID tASSIGN arithmetic tSEMI {
-					int entry = lookup(symbol_table,depth,$1);
+					int entry = lookup(symbol_table,$1);
 					if (entry == -1) {
 						snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: erreur : variable non déclarée\n",yylineno);
 					}
                                         pop(symbol_table);
-					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n", entry, symbol_table->current_index);
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP3 %d %d\n", entry, symbol_table->current_index);
 				}
 ;
 
@@ -414,12 +451,14 @@ arithmetic:
 ;
 
 value:
-        func_call 
+        func_call {
+
+        }
      |   tID    { 
-                        	int entry = lookup(symbol_table,depth,$1);
+                        	int entry = lookup(symbol_table,$1);
                                 int i = symbol_table->current_index;
                                 push(symbol_table, symbol_table->data[entry]);
-                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",i , entry);
+                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP1 %d %d\n",i , entry);
 
                 }
     |   tNB    {
@@ -522,6 +561,7 @@ int main(void) {
   yyparse();
 
   table_print(symbol_table);
+  table_print(func_table);
   write_to_file(fptr,inst_list);
   fclose(fptr);
   free(symbol_table);

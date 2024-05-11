@@ -7,12 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum type {func, var, sys_func, constant} type;
+typedef enum type {void_fun, int_fun} type;
 
 typedef struct table_entry
 {
     char entry_name[16];
-    int val;
+    int fun_line;
+    int num_param;
+    type fun_type;
     
 } table_entry;
 
@@ -33,7 +35,7 @@ void push(table * t,table_entry add);
 
 table_entry * pop(table * t);
 
-int lookup(table *t, int depth, char * entry_name);
+int lookup(table *t, char * entry_name);
 
 table_entry * top(table * t);
 
