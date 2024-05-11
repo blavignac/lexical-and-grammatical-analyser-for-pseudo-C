@@ -40,39 +40,44 @@
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".jmf";
                 if(strncmp(list->instructions[i],str,4) == 0){
-                        pop(symbol_table);
                         snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n",symbol_table->current_index, jmp);
                         
                 }
         }
     }
 
-    void fun(instruction_list * list, int jmp){
+    int fun(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".jmf";
                 if(strncmp(list->instructions[i],str,4) == 0){
-                        pop(symbol_table);
                         char ** end;
                         int addr = atoi(list->instructions[i]+4);
                         snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n", addr, jmp);
+                        return addr;
                 }
         }
     }
 
-    void fill_while_instruction(instruction_list * list, int jmp){
+    int fill_while_instruction(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".while";
                 if(strncmp(list->instructions[i],str,6) == 0){
-                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n",symbol_table->current_index, jmp);
+                        char ** end;
+                        int addr = atoi(list->instructions[i]+6);
+                        snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMF %d %d\n",addr, jmp);
+                        return addr;
                 }
         }
     }
 
-    void fill_jmp_instruction(instruction_list * list, int jmp){
+    int fill_jmp_instruction(instruction_list * list, int jmp){
         for(int i = list->current_index -1; i > 0; i--){
                 char str[]=".jmp";
                 if(strncmp(list->instructions[i],str,4) == 0){
+                        char ** end;
+                        int addr = atoi(list->instructions[i]+4);
                         snprintf(list->instructions[i],INSTRUCTION_SIZE,"JMP %d\n", jmp);
+                        return addr;
                 }
         }
     }
@@ -348,44 +353,43 @@ expression:
 
 
 branch:
-        if {fun(inst_list,inst_list->current_index);}
+        if {
+                symbol_table->current_index = fun(inst_list,inst_list->current_index);
+                }
     |   if_else {}
 ;
-
-if:
-        tIF tLPAR condition tRPAR {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmf %d\n", symbol_table->current_index-1);
-        } block 
-;
-
-if_else:
-        if {    fun(inst_list,inst_list->current_index+1);
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmp\n");
-        } tELSE block { 
-                fill_jmp_instruction(inst_list,inst_list->current_index+2);
-        } 
-;
-
-
-
-
 
 condition:
         bool
 ;
 
 
+if:
+        tIF tLPAR condition tRPAR {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmf %d\n", symbol_table->current_index-1);
+                pop(symbol_table);
+        } block 
+;
+
+if_else:
+        if {    symbol_table->current_index = fun(inst_list,inst_list->current_index+1);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".jmp %d\n", symbol_table->current_index);
+        } tELSE block { 
+                symbol_table->current_index = fill_jmp_instruction(inst_list,inst_list->current_index);
+        } 
+;
+
+
+
 while:
         tWHILE tLPAR {
                 $1 = inst_list->current_index;
         } condition {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".while\n");
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".while %d\n", symbol_table->current_index-1);
                 pop(symbol_table);
-                depth++;
         } tRPAR block {
-                fill_while_instruction(inst_list,inst_list->current_index+1);
+                symbol_table->current_index = fill_while_instruction(inst_list,inst_list->current_index+1);
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"JMP %d\n",$1);
-                depth--;
         }       
 
 ;
