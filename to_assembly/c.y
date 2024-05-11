@@ -147,18 +147,23 @@ main:
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".main\n");
                 symbol_table->current_index = 0;
                 symbol_table->current_index = 0;
-                depth = 0;
         } tLPAR tVOID tRPAR main_block  {}
 ;
 
+
 param_list:
         %empty 
-    |   param
-    |   param tCOMMA param_list
+    |   tVOID
+    |   param  param_pattern
+;
+
+param_pattern:
+        %empty
+    |   tCOMMA param param_pattern
 ;
 
 param:
-        type tID {
+        tINT tID {
                 int var_exists = lookup(symbol_table,depth,$2);
 		if (var_exists != -1) {
 			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function parameter already has that name %s\n", yylineno, $2);
@@ -170,10 +175,9 @@ param:
         }
 ;
 
-
 func_call:
         tID tLPAR func_call_param_list tRPAR  {
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"CALsL\n");
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"CALL\n");
         }
 ;
 
@@ -194,17 +198,21 @@ func_call_param:
 
 
 func_dec:
-        tINT tID {
+        tINT func_signature
+    |   tVOID func_signature
+;      
+func_signature :
+        tID {
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"\n");
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".%s\n",  $2);
-                printf("%s",$2);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".%s\n",  $1);
+                printf("%s",$1);
 
-                int var_exists = lookup(func_table,depth,$2);
+                int var_exists = lookup(func_table,depth,$1);
 		if (var_exists != -1) {
-			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function with this name already declared%s\n", yylineno, $2);
+			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function with this name already declared%s\n", yylineno, $1);
 		}
                 table_entry entry;
-                strncpy(entry.entry_name, $2, 16);
+                strncpy(entry.entry_name, $1, 16);
                 entry.val = inst_list->current_index;
                 push(func_table,entry); 
 
@@ -225,6 +233,8 @@ func_dec:
 
         }
 ;
+
+
 
 
 type:
@@ -296,7 +306,6 @@ assign_arith:
 
 
 arithmetic:  
-    
         arithmetic tADD arithmetic {    
                 pop(symbol_table);
                 int i1 = symbol_table->current_index;

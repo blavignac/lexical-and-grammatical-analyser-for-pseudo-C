@@ -1,9 +1,10 @@
-int f(int a,){
-  return a;
+int fasdf(int a){
 }
 
 void main(void) {
-  int a = 10 +11;
+  int a = 0;
   int b;
-  //b = f(10);
+  fasdf();
+  
+
 }
