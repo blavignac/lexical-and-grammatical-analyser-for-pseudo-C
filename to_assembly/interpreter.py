@@ -5,9 +5,7 @@ mem = [0]*2048
 ip = 0
 offset = 0
 
-
 while ip<len(asm):
-    print(asm[ip])
     if asm[ip][0][0] == ".":
         ip+=1
     elif asm[ip][0][0] == "error":
@@ -53,14 +51,13 @@ while ip<len(asm):
     elif asm[ip][0] == "CALL":
         ip = asm[ip][1]
     elif asm[ip][0] == "OFFSETP":
+        offset += int(asm[ip][1])
         ip+=1
-        offset += asm[ip[1]]
     elif asm[ip][0] == "OFFSETN":
+        offset -= int(asm[ip][1])
         ip+=1
-        offset -= asm[ip[1]]
     elif asm[ip][0] == "RET":
-        ip = mem[asm[ip[1]] + offset]
+        ip = mem[asm[ip][1] + offset]
     elif asm[ip][0] == "PRINT":
         print(mem[asm[ip][1] + offset])
         ip+=1
-        

@@ -194,7 +194,7 @@ func_call:
 			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function not declared with name :%s\n", yylineno, $1);
 		}
                 
-                //verifier si void
+                //verifier si voidfill_ret_instruction
                 //return value push
                 table_entry ret_val;
 		snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"AFC %i 0\n", symbol_table->current_index);
@@ -209,7 +209,7 @@ func_call:
         } tLPAR func_call_param_list tRPAR  {
                 int func_exits = lookup(func_table,$1);
                 printf("num_param is :%d\n",func_table->data[func_exits].num_param);
-                int offset = symbol_table->current_index - func_table->data[func_exits].num_param - 3;
+                int offset = offset + symbol_table->current_index - func_table->data[func_exits].num_param -2;
 
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OFFSETP %d\n",offset);
 
@@ -324,7 +324,7 @@ var_dec_assign_arith:
                 push(symbol_table,entry); 
         } arithmetic tSEMI{
                 pop(symbol_table);
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP2 %d %d\n",  symbol_table->current_index-1, symbol_table->current_index);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",  symbol_table->current_index-1, symbol_table->current_index);
                 
         }
 
@@ -337,7 +337,7 @@ assign_arith:
 						snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"%d: erreur : variable non déclarée\n",yylineno);
 					}
                                         pop(symbol_table);
-					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP3 %d %d\n", entry, symbol_table->current_index);
+					snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n", entry, symbol_table->current_index);
 				}
 ;
 
@@ -458,7 +458,7 @@ value:
                         	int entry = lookup(symbol_table,$1);
                                 int i = symbol_table->current_index;
                                 push(symbol_table, symbol_table->data[entry]);
-                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP1 %d %d\n",i , entry);
+                                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",i , entry);
 
                 }
     |   tNB    {
@@ -532,7 +532,9 @@ expression_list:
 ;
 
 return:
-        tRETURN arithmetic tSEMI    {}
+        tRETURN arithmetic tSEMI    {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"COP %d %d\n",  0, symbol_table->current_index-1);
+                }
 ;
 
 
