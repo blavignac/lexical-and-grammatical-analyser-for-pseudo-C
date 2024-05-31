@@ -208,7 +208,6 @@ func_call:
                 
         } tLPAR func_call_param_list tRPAR  {
                 int func_exits = lookup(func_table,$1);
-                printf("num_param is :%d\n",func_table->data[func_exits].num_param);
                 int offset = offset + symbol_table->current_index - func_table->data[func_exits].num_param -2;
 
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OFFSETP %d\n",offset);
@@ -239,22 +238,20 @@ func_call_param:
 ;
 
 
-func_dec:
-        tINT func_signature
-    |   tVOID func_signature
-;      
-func_signature :
-        tID {
+  
+func_dec :
+        tINT tID {
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"\n");
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".%s\n",  $1);
-                printf("%s",$1);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".%s\n",  $2);
+                //printf("%s",$2);
 
-                int var_exists = lookup(func_table,$1);
+                int var_exists = lookup(func_table,$2);
 		if (var_exists != -1) {
-			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function with this name already declared%s\n", yylineno, $1);
+			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function with this name already declared%s\n", yylineno, $2);
 		}
                 table_entry entry;
-                strncpy(entry.entry_name, $1, 16);
+                entry.fun_type = int_fun;
+                strncpy(entry.entry_name, $2, 16);
                 entry.fun_line = inst_list->current_index;
                 entry.num_param = 0;
                 push(func_table,entry); 
@@ -271,6 +268,36 @@ func_signature :
         } param_list tRPAR block  {
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"RET 1\n");
         }
+        |
+        tVOID tID {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"\n");
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,".%s\n",  $2);
+                //printf("%s",$2);
+
+                int var_exists = lookup(func_table,$2);
+		if (var_exists != -1) {
+			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function with this name already declared%s\n", yylineno, $2);
+		}
+                table_entry entry;
+                strncpy(entry.entry_name, $2, 16);
+                entry.fun_line = inst_list->current_index;
+                entry.num_param = 0;
+                entry.fun_type = void_fun;
+                push(func_table,entry); 
+
+                symbol_table->current_index = 0;
+                symbol_table->current_index = 0;
+
+        } tLPAR {
+                table_entry entry;
+                table_entry entry1;
+
+                push(symbol_table,entry);
+                push(symbol_table,entry1);  
+        } param_list tRPAR block  {
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"RET 1\n");
+        }
+
 ;
 
 
@@ -478,6 +505,7 @@ expression:
     |   branch  
     |   while
     |   sys_fonc_call
+    |   func_call {pop(symbol_table);}
     |   return
 ;
 
@@ -562,8 +590,8 @@ int main(void) {
   fptr = fopen("asm", "w");
   yyparse();
 
-  table_print(symbol_table);
-  table_print(func_table);
+  //table_print(symbol_table);
+  //table_print(func_table);
   write_to_file(fptr,inst_list);
   fclose(fptr);
   free(symbol_table);

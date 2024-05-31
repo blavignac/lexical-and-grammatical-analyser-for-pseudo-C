@@ -1,17 +1,35 @@
-int f(int a){
-  a = 10;
-  return 99;
+int compute(int a, int d) {
+
+    int b = a + d * 5;
+    int c = a + d * 5;
+
+    b = a;
+
+    while (c > 0) {
+
+      b = b + a * 4;
+
+    }
+
+    return b;
+
 }
 
-void main(void) {
-  int a = 69;
-  int f,g,h,y,e;
-  int k = 11;
-  a = f(444);
-  int c = 22;
-  int d = 33;
 
-  print(a);
-  print(c);
-  print(d);
+void main(void) {
+
+  int a;
+
+  if (a == 3) {
+
+    print(a);
+
+  } else {
+
+    int b = compute(a, 2 * a);
+
+    print(b);
+
+  }
+
 }
