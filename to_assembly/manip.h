@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum type {void_fun, int_fun} type;
+typedef enum type {void_type, int_type} type;
 
 typedef struct table_entry
 {

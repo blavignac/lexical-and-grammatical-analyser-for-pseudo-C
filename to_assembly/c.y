@@ -183,6 +183,8 @@ param:
                 table_entry entry;
                 strncpy(entry.entry_name, $2, 16);
                 push(symbol_table,entry);
+
+                //here for param type
                 func_table->data[func_table->current_index-1].num_param+=1;
         }
 ;
@@ -208,11 +210,11 @@ func_call:
                 
         } tLPAR func_call_param_list tRPAR  {
                 int func_exits = lookup(func_table,$1);
-                int offset = offset + symbol_table->current_index - func_table->data[func_exits].num_param -2;
+                int offset = symbol_table->current_index - func_table->data[func_exits].num_param -2;
 
                 snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"OFFSETP %d\n",offset);
 
-                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"CALL %d %d\n", func_table->data[func_exits].fun_line, symbol_table->current_index - func_table->data[func_exits].num_param - 2);
+                snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"CALL %d %d\n", func_table->data[func_exits].fun_line, offset);
 
                 symbol_table->current_index = fill_ret_instruction(inst_list,inst_list->current_index);
 
@@ -250,7 +252,7 @@ func_dec :
 			snprintf(add_instruction(inst_list),INSTRUCTION_SIZE,"error  line %d: function with this name already declared%s\n", yylineno, $2);
 		}
                 table_entry entry;
-                entry.fun_type = int_fun;
+                entry.fun_type = int_type;
                 strncpy(entry.entry_name, $2, 16);
                 entry.fun_line = inst_list->current_index;
                 entry.num_param = 0;
@@ -282,7 +284,7 @@ func_dec :
                 strncpy(entry.entry_name, $2, 16);
                 entry.fun_line = inst_list->current_index;
                 entry.num_param = 0;
-                entry.fun_type = void_fun;
+                entry.fun_type = void_type;
                 push(func_table,entry); 
 
                 symbol_table->current_index = 0;

@@ -4,8 +4,9 @@ asm = [[l[0]] + [int(x) for x in l[1:]] for l in asm]
 mem = [0]*2048
 ip = 0
 offset = 0
+inst  = 0
 
-while ip<len(asm):
+while ip<len(asm) :
     if asm[ip][0][0] == ".":
         ip+=1
     elif asm[ip][0][0] == "error":
@@ -60,4 +61,4 @@ while ip<len(asm):
         ip = mem[asm[ip][1] + offset]
     elif asm[ip][0] == "PRINT":
         print(mem[asm[ip][1] + offset])
-        ip+=1
+        ip+=1 
